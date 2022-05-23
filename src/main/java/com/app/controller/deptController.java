@@ -26,12 +26,23 @@ public class deptController {
     }
 
 
+    //打卡请求
     //综合注解
-    @RequestMapping(value = "/emp/add1",method = RequestMethod.POST)
+    @RequestMapping(value = "/emp/clock",method = RequestMethod.POST)
     @ResponseBody
     public void SetData(HttpServletRequest request, HttpServletResponse response) {
         String str = request.getParameter("json_params");
         System.out.println(str);
+        //将前台传过来的字符串转为Json
+        userHealth a = JSON.parseObject(str, userHealth.class);
+        emp.InsertData(a);
+    }
+
+    //新增用户
+    @RequestMapping(value = "/emp/adduser")
+    public void AddUser(HttpServletRequest request){
+        String str = request.getParameter("json_params");
+        System.out.printf(str);
         //将前台传过来的字符串转为Json
         userHealth a = JSON.parseObject(str, userHealth.class);
         emp.InsertData(a);
