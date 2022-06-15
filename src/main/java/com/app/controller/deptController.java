@@ -31,11 +31,20 @@ public class deptController {
     @RequestMapping(value = "/emp/clock",method = RequestMethod.POST)
     @ResponseBody
     public void SetData(HttpServletRequest request, HttpServletResponse response) {
-        String str = request.getParameter("json_params");
-        System.out.println(str);
-        //将前台传过来的字符串转为Json
-        userHealth a = JSON.parseObject(str, userHealth.class);
-        emp.InsertData(a);
+        /**
+         *这边会抛出空指针异常
+         * 目测是连接数据库的问题
+         * */
+        try{
+            String str = request.getParameter("json_params");
+            System.out.println(str);
+            //将前台传过来的字符串转为Json
+            userHealth a = JSON.parseObject(str, userHealth.class);
+            emp.InsertData(a);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     //新增用户

@@ -4,7 +4,7 @@ spring:
     username: root
     password: 123456789
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://43.138.55.241:3306/app_database
+    url: jdbc:mysql://43.138.55.241:3306/app_schema
     type: com.alibaba.druid.pool.DruidDataSource
     #   数据源其他配置
     initialSize: 5
