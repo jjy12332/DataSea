@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/DataSea.iml" filepath="$PROJECT_DIR$/.idea/DataSea.iml" />
+      <module fileurl="file://$PROJECT_DIR$/App_DataSea.iml" filepath="$PROJECT_DIR$/App_DataSea.iml" />
     </modules>
   </component>
 </project>

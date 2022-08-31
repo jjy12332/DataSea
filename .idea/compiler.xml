@@ -7,11 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="DataSea" />
+        <module name="App_DataSea" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="DataSea" target="1.8" />
+      <module name="App_DataSea" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

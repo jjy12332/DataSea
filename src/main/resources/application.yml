@@ -35,3 +35,20 @@ spring:
 mybatis:
 #  config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mapper/*.xml
+
+Spring:
+  servlet:
+    multipart:
+      # 设置单个文件大小
+      max-file-size: 100MB
+      # 设置单次请求文件的总大小
+      max-request-size: 100MB
+
+#FTP配置
+FTP:
+  ADDRESS: 43.138.55.241
+  PORT: 22
+  USERNAME: root
+  PASSWORD: WeiXinDaKa/*-+892951659
+  BASE-PATH: /home/image
+  URL: ftp:43.138.55.241/home/image
