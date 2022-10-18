@@ -2,15 +2,15 @@ package com.app.controller;
 
 
 
-import com.app.bean.UserFood;
-import com.app.bean.UserHealth;
-import com.app.bean.UserLeave;
+import com.app.bean.*;
 import com.app.service.UserHealthService;
+import com.app.service.impl.UserHealthServiceImpl;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RestController
 public class UserHealthController {
@@ -48,13 +48,29 @@ public class UserHealthController {
 
     //用户新增药品
     @RequestMapping(value = "/emp/addDrug",method = RequestMethod.POST)
-    public void AddDrug(@RequestBody String addDrug) throws JSONException {
-        emp.AddDrug(addDrug);
+    public void AddDrug(@RequestBody String userDrug) throws JSONException {
+        emp.addDrug(userDrug);
     }
 
     //用户新增菜品
     @RequestMapping(value = "/emp/addMeal",method = RequestMethod.POST)
-    public void AddMeal(@RequestBody UserFood userfood){
+    public void AddMeal(@RequestBody String userfood){
+        System.out.println(userfood);
         emp.addFood(userfood);
     }
+
+    //查询药品，分页查询【RequestParam，PathVariable，RequestBody（post消息体的）】
+    @RequestMapping(value = "/emp/queryDrug",method = RequestMethod.POST)
+    public List<UserDrug> queryDrug(QueryPage queryPage){
+        System.out.println(queryPage.getPage()+queryPage.getRows()+queryPage.getOpenId());
+        List<UserDrug> list = emp.queryDrug(queryPage.getPage(),queryPage.getRows(),queryPage.getOpenId());
+        return list;
+    }
+
+    //查询药品总条数
+    @RequestMapping(value = "/emp/drugNum",method = RequestMethod.POST)
+    public Integer drugNum(String openId){
+        return emp.drugNum(openId);
+    }
+
 }

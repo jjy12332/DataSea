@@ -4,31 +4,31 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.app.mapper.UserMessageMapper">
     <insert id="addMessage">
-        insert into userMessage(
-            OpenId,
-            UserName,
-            AvatarUrl,
-            Content,
-            ImageUrl,
-            PhoneType,
-            CreateTime
+        insert into UserMessage(
+            openId,
+            userName,
+            avatarUrl,
+            content,
+            imageUrl,
+            phoneType,
+            createTime
         ) values(
-            #{OpenId},
-            #{UserName},
-            #{AvatarUrl},
-            #{Content},
-            #{ImageUrl},
-            #{PhoneType},
-            #{CreateTime}
+            #{openId},
+            #{userName},
+            #{avatarUrl},
+            #{content},
+            #{imageUrl},
+            #{phoneType},
+            #{createTime}
         );
     </insert>
 
     <select id="queryMessage" resultType="com.app.bean.UserMessage">
-        select * from userMessage limit #{start},#{rows};
+        select * from UserMessage limit #{start},#{rows};
     </select>
 
     <select id="MessageNum" resultType="integer">
-        select count(1) from userMessage;
+        select count(1) from UserMessage;
     </select>
 
 </mapper>

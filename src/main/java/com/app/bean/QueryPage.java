@@ -13,6 +13,8 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Table(name="分页查询")
 public class QueryPage {
+    //用户唯一ID
+    private  String openId;
     //查询页数
     private Integer page;
     //查询行数

@@ -2,11 +2,9 @@ package com.app.mapper;
 
 
 
-import com.app.bean.UserDrug;
-import com.app.bean.UserFood;
-import com.app.bean.UserHealth;
-import com.app.bean.UserLeave;
+import com.app.bean.*;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,11 +20,17 @@ public interface UserHealthMapper {
      void insertData1(UserHealth userHealth);
 
      //用户请假
-     void InsertData2(List<UserLeave> list);
+     void insertData2(List<UserLeave> list);
 
      //增加药品
      void insertDrug(UserDrug userDrug);
 
      //增加菜品
      void insertFood(UserFood userFood);
+
+     //返回药品
+     List<UserDrug> queryDrug(@Param("start")Integer start, @Param("rows") Integer rows,@Param("openId") String openId);
+
+     //返回药品总数
+     Integer drugNum(String openId);
 }

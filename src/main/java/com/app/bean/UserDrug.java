@@ -44,7 +44,9 @@ public class UserDrug {
     private String timeNoon;
     //晚上吃药时间
     private String timeNight;
-    //是否重要
+    //是否单价
     private int drugPrice;
+    //具体描述
+    private String detail;
 
 }

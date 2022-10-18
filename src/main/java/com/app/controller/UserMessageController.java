@@ -4,6 +4,7 @@ import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
 import com.app.config.FtpUtil;
 import com.app.service.UserMessageService;
+import com.app.service.impl.UserMessageServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,7 @@ public class UserMessageController {
 
     //查询留言，分页查询【RequestParam，PathVariable RequestBody】
     @RequestMapping(value = "/emp/queryMessage",method = RequestMethod.POST)
-    public List<UserMessage> message(@RequestBody QueryPage queryPage){
+    public List<UserMessage> message( QueryPage queryPage){
 
         return emp.queryMessage(queryPage.getPage(),queryPage.getRows());
     }
