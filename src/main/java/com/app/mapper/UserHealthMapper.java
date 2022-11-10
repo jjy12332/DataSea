@@ -16,8 +16,11 @@ public interface UserHealthMapper {
      //查询用户
      UserHealth GetName(String user_name);
 
-     //新增用户，打卡用户
-     void insertData1(UserHealth userHealth);
+     //新增用户
+     void insertUserInfo(UserInfo userInfo);
+
+     //用户打卡信息
+     void insertUserHealth(UserHealth userHealth);
 
      //用户请假
      void insertData2(List<UserLeave> list);
@@ -29,8 +32,11 @@ public interface UserHealthMapper {
      void insertFood(UserFood userFood);
 
      //返回药品
-     List<UserDrug> queryDrug(@Param("start")Integer start, @Param("rows") Integer rows,@Param("openId") String openId);
+     List<UserDrugResult> queryDrug(@Param("start")Integer start, @Param("rows") Integer rows,@Param("openId") String openId);
 
      //返回药品总数
      Integer drugNum(String openId);
+
+     //根据药品id查询药品信息
+     UserDrug queryDrugId(@Param("openId") String openId, @Param("drugUuid") String drugUuid);
 }

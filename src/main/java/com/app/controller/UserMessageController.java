@@ -4,7 +4,6 @@ import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
 import com.app.config.FtpUtil;
 import com.app.service.UserMessageService;
-import com.app.service.impl.UserMessageServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;

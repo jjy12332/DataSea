@@ -20,6 +20,8 @@ public class UserDrug {
     private String userName;
     //创建时间
     private String createTime;
+    //药品id
+    private String drugUuid;
     //什么时间点吃药 早上、中午、晚上
     private String eatTime;
     //药品名字
@@ -44,8 +46,10 @@ public class UserDrug {
     private String timeNoon;
     //晚上吃药时间
     private String timeNight;
-    //是否单价
+    //药品单价
     private int drugPrice;
+    //药品厂商
+    private String manufacturer;
     //具体描述
     private String detail;
 

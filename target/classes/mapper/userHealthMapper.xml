@@ -55,6 +55,8 @@
         INSERT INTO UserDrug(
             openId,
             userName,
+            createTime,
+            drugUuid,
             eatTime,
             drugName,
             eatMorning,
@@ -68,10 +70,13 @@
             timeNoon,
             timeNight,
             drugPrice,
+            manufacturer,
             detail
         ) VALUES(
             #{openId},
             #{userName},
+            #{createTime},
+            #{drugUuid},
             #{eatTime},
             #{drugName},
             #{eatMorning},
@@ -85,6 +90,7 @@
             #{timeNoon},
             #{timeNight},
             #{drugPrice},
+            #{manufacturer},
             #{detail}
         );
     </insert>
@@ -107,10 +113,36 @@
         );
     </insert>
 
-    <select id="queryDrug" resultType="com.app.bean.UserDrug">
-        select * from UserDrug WHERE openId = #{openId} limit #{start},#{rows};
+    <select id="queryDrug" resultType="com.app.bean.UserDrugResult">
+            select t1.*,t2.subscriptionStatus from UserDrug t1 LEFT JOIN UserDrugSubscription t2 ON t1.openId  = t2.openId and t1.drugUuid = t2.drugUuid WHERE t1.openId = #{openId} limit #{start},#{rows};
     </select>
+
     <select id="drugNum" resultType="integer">
         select count(1) from UserDrug WHERE openId = #{openId};
+    </select>
+
+    <select id="queryDrugId" resultType="com.app.bean.UserDrug">
+        select openId,
+               userName,
+               createTime,
+               drugUuid,
+               eatTime,
+               drugName,
+               eatMorning,
+               eatNoon,
+               eatNight,
+               eatDays,
+               eatMorningNum,
+               eatNoonNum,
+               eatNightNum,
+               timeMorning,
+               timeNoon,
+               timeNight,
+               drugPrice,
+               manufacturer,
+               detail
+        from UserDrug t1
+        WHERE openId = #{openId}
+          and drugUuid = #{drugUuid}
     </select>
 </mapper>

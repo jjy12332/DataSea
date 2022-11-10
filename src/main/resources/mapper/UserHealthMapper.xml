@@ -3,8 +3,33 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.app.mapper.UserHealthMapper">
-    <!-- 用户健康表插入数据   -->
-    <insert id="insertData1" >
+
+    <!-- 获取用户信息 -->
+    <select id="GetName" resultType="com.app.bean.UserHealth">
+        SELECT * FROM userHealth WHERE UserName=#{user_name};
+    </select>
+
+    <!-- 向用户表添加信息-->
+    <insert id="insertUserInfo" >
+        INSERT INTO UserInfo(
+            openId,
+            userName,
+            userAvatar,
+            createTime,
+            phone,
+            token
+        ) VALUES(
+                    #{openId},
+                    #{userName},
+                    #{userAvatar},
+                    #{createTime},
+                    #{phone},
+                    #{token}
+                );
+    </insert>
+
+    <!-- 用户健康表插入数据  -->
+    <insert id="insertUserHealth">
         INSERT INTO UserHealth(
             openId,
             userName,
@@ -13,25 +38,25 @@
             longitude,
             latitude
         ) VALUES(
-            #{openId},
-            #{userName},
-            #{createTime},
-            #{nowAddress},
-            #{longitude},
-            #{latitude}
-        );
+                    #{openId},
+                    #{userName},
+                    #{createTime},
+                    #{nowAddress},
+                    #{longitude},
+                    #{latitude}
+                );
     </insert>
 
     <!--  用户请假表插入数据  -->
     <insert id="insertData2" >
         INSERT INTO UserLeave(
-            openId,
-            userName,
-            createTime,
-            leaveType,
-            leaveCase,
-            startTime,
-            endTime
+        openId,
+        userName,
+        createTime,
+        leaveType,
+        leaveCase,
+        startTime,
+        endTime
         ) VALUES
         <foreach collection="list" index="index" item="item" separator=",">
             (
@@ -46,15 +71,13 @@
         </foreach>
     </insert>
 
-    <select id="GetName" resultType="com.app.bean.UserHealth">
-        SELECT * FROM userHealth WHERE UserName=#{user_name};
-    </select>
-
     <!-- 新增药品 -->
     <insert id="insertDrug">
         INSERT INTO UserDrug(
             openId,
             userName,
+            createTime,
+            drugUuid,
             eatTime,
             drugName,
             eatMorning,
@@ -68,27 +91,32 @@
             timeNoon,
             timeNight,
             drugPrice,
+            manufacturer,
             detail
         ) VALUES(
-            #{openId},
-            #{userName},
-            #{eatTime},
-            #{drugName},
-            #{eatMorning},
-            #{eatNoon},
-            #{eatNight},
-            #{eatDays},
-            #{eatMorningNum},
-            #{eatNoonNum},
-            #{eatNightNum},
-            #{timeMorning},
-            #{timeNoon},
-            #{timeNight},
-            #{drugPrice},
-            #{detail}
-        );
+                    #{openId},
+                    #{userName},
+                    #{createTime},
+                    #{drugUuid},
+                    #{eatTime},
+                    #{drugName},
+                    #{eatMorning},
+                    #{eatNoon},
+                    #{eatNight},
+                    #{eatDays},
+                    #{eatMorningNum},
+                    #{eatNoonNum},
+                    #{eatNightNum},
+                    #{timeMorning},
+                    #{timeNoon},
+                    #{timeNight},
+                    #{drugPrice},
+                    #{manufacturer},
+                    #{detail}
+                );
     </insert>
 
+    <!-- 新增食物 -->
     <insert id="insertFood">
         INSERT INTO UserFood(
             userName,
@@ -98,19 +126,48 @@
             foodProbability,
             openId
         ) values(
-            #{userName},
-            #{createTime},
-            #{foodName},
-            #{foodCalorie},
-            #{foodProbability},
-            #{openId}
-        );
+                    #{userName},
+                    #{createTime},
+                    #{foodName},
+                    #{foodCalorie},
+                    #{foodProbability},
+                    #{openId}
+                );
     </insert>
 
-    <select id="queryDrug" resultType="com.app.bean.UserDrug">
-        select * from UserDrug WHERE openId = #{openId} limit #{start},#{rows};
+    <!-- 查询用户所有药品，同时携带药品的订阅状态 -->
+    <select id="queryDrug" resultType="com.app.bean.UserDrugResult">
+        select t1.*,t2.subscriptionStatus from UserDrug t1 LEFT JOIN UserDrugSubscription t2 ON t1.openId  = t2.openId and t1.drugUuid = t2.drugUuid WHERE t1.openId = #{openId} limit #{start},#{rows};
     </select>
+
+    <!-- 查询用户药品总数 -->
     <select id="drugNum" resultType="integer">
         select count(1) from UserDrug WHERE openId = #{openId};
+    </select>
+
+    <!-- 根据用户id和药品id 查询指定药品 -->
+    <select id="queryDrugId" resultType="com.app.bean.UserDrug">
+        select openId,
+               userName,
+               createTime,
+               drugUuid,
+               eatTime,
+               drugName,
+               eatMorning,
+               eatNoon,
+               eatNight,
+               eatDays,
+               eatMorningNum,
+               eatNoonNum,
+               eatNightNum,
+               timeMorning,
+               timeNoon,
+               timeNight,
+               drugPrice,
+               manufacturer,
+               detail
+        from UserDrug t1
+        WHERE openId = #{openId}
+          and drugUuid = #{drugUuid}
     </select>
 </mapper>
