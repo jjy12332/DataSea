@@ -3,24 +3,27 @@ package com.app.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.app.bean.DoResult;
-import com.app.bean.UserDrug;
 import com.app.service.ApiInterfaceService;
-import lombok.extern.log4j.Log4j;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-import org.mockito.internal.util.StringUtil;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import sun.misc.Unsafe;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
  * 各类API接口调用
+ *
+ * 学习mono和WebClient
+ *
+ *    WebClient是Spring提供的非阻塞、响应式的Http客户端，提供同步及异步的API，将会代替RestTemplate及AsyncRestTemplate；
+ *
  */
 @Service
 public class ApiInterfaceServiceImpl implements ApiInterfaceService {
@@ -36,11 +39,14 @@ public class ApiInterfaceServiceImpl implements ApiInterfaceService {
      */
 //    private static long expiresTime;
 
+    //如果相同域名则可以使用这个固定域名，目前不启用
+//    private WebClient webClient = WebClient.create("https://api.weixin.qq.com");
 
+    WebClient webClient = WebClient.create();
 
 
     /*
-     * 接口请求调用
+     * 接口请求调用（旧版）
      */
     public DoResult interfaceAPI(String url, Object params,String type) {
             //调用接口的方法：在项目的工具包下导入HttpClientUtil这个工具类，或者也可以使用Spring框架的restTemplate来调用
@@ -49,10 +55,10 @@ public class ApiInterfaceServiceImpl implements ApiInterfaceService {
             //调用接口
             ResponseEntity<String> responseEntity = null;
             try {
-                if("get".equals(type)) {
+                if("post".equals(type)) {
                     responseEntity = restTemplate.postForEntity(new URI(url), params, String.class);
                 }
-                if("post".equals(type)){
+                if("get".equals(type)){
                     responseEntity = restTemplate.getForEntity(url, String.class, params);
                 }
             } catch (URISyntaxException e) {
@@ -68,42 +74,71 @@ public class ApiInterfaceServiceImpl implements ApiInterfaceService {
                 // 返回异常
                 return DoResult.error(errcode,errmsg,null);
             }
+        Unsafe.getUnsafe();
         return DoResult.success(object);
     }
 
 
 
-//    public DoResult interfaceGet(String url, Map<String, String> params) {
-//        System.out.println(accessToken);
-//        if (StringUtils.isAllBlank(accessToken)) {
-//
-//            if (expiresTime < System.currentTimeMillis()) {
-//                //调用接口的方法：在项目的工具包下导入HttpClientUtil这个工具类，或者也可以使用Spring框架的restTemplate来调用
-//                RestTemplate restTemplate = new RestTemplate();
-//
-//                //调用接口
-//                ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class, params);
-//                //获取消息体
-//                String body = responseEntity.getBody();
-//                JSONObject object = JSON.parseObject(body);
-//                Integer errcode = object.getInteger("errcode");
-//                if (errcode != null && errcode != 0) {
-//                    String errmsg = object.getString("errmsg");
-//                    System.out.println("请求accessToken失败，返回码：" + errcode + "，错误信息：" + errmsg);
-//                    // 返回异常
-//                    return DoResult.error(errcode, errmsg, null);
+
+
+    /**
+     * GET请求
+     */
+    public  DoResult get(String url) {
+        //同步方式
+//        Mono<String> mono = webClient.get().uri(url).retrieve().bodyToMono(String.class).retry(0);
+//        String temp = mono.block();
+        return DoResult.success(webClient.get().uri(url).retrieve().bodyToMono(String.class).retry(3).block());
+        //异步方式
+//        final CountDownLatch latch = new CountDownLatch(5);
+//        for (int i = 0; i < 5; i++) {
+//            requestPath = "http://localhost:8080/demo/httptest/getUser?userId=1000&userName=李白" + i;
+//            mono = webClient.get().uri(requestPath).retrieve().bodyToMono(String.class);
+//            mono.subscribe(new Consumer<String>() {
+//                @Override
+//                public void accept(String s) {
+//                    latch.countDown();
+//                    System.out.println("get subscribe返回结果：" + s);
 //                }
-//                // 缓存accessToken
-//                accessToken = object.getString("access_token");
-//                // 设置accessToken的失效时间
-//                long expires_in = object.getLong("expires_in");
-//                // 失效时间 = 当前时间 + 有效期(提前一分钟，也可不提前，这里只是稳妥一下)
-//                expiresTime = System.currentTimeMillis() + (expires_in - 60) * 1000;
-//                return DoResult.success(object.getString("access_token"));
-//
-//            }
-//            return DoResult.error("token已过期", null);
+//            });
 //        }
-//        return DoResult.success(accessToken);
-//    }
+//
+//        try {
+//            latch.await();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    /**
+     * POST请求(发送键值对数据）
+     */
+    public DoResult postKeyValue(String url,Object params) {
+//        String requestPath = "http://localhost:8080/demo/httptest/getUser";
+//        WebClient webClient = WebClient.create();
+//        MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
+//        map.add("userId", "1000");
+//        map.add("userName", "李白");
+        Mono<String> mono = webClient.post().uri(url).bodyValue(params).retrieve().bodyToMono(String.class);
+        System.out.println("post返回结果：" + mono.block());
+        System.out.println("post返回结果：" + mono.block());
+        return DoResult.success(mono.block());
+    }
+
+
+    /**
+     * POST请求(发送JSON数据）
+     */
+    public DoResult postJson(String url,String params) {
+//        String requestPath = "http://localhost:8080/demo/httptest/addUser";
+        WebClient webClient = WebClient.create();
+//        String param = "{\"userId\": \"1001\",\"userName\":\"杜甫\"}";
+        Mono<String> mono = webClient.post().uri(url).contentType(MediaType.APPLICATION_JSON).bodyValue(params)
+                .retrieve().bodyToMono(String.class);
+        System.out.println("post json返回结果：" + mono.block());
+        return DoResult.success();
+    }
+
+
 }

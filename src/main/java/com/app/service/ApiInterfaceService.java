@@ -13,5 +13,8 @@ public interface ApiInterfaceService {
      * 参数三: 请求类型post或者get
      */
     DoResult interfaceAPI(String url, Object params,String type);
+    DoResult get(String url);
+    DoResult postKeyValue(String url,Object params);
+    DoResult postJson(String url,String params);
 
 }

@@ -5,26 +5,30 @@
 <mapper namespace="com.app.mapper.UserHealthMapper">
 
     <!-- 获取用户信息 -->
-    <select id="GetName" resultType="com.app.bean.UserHealth">
-        SELECT * FROM userHealth WHERE UserName=#{user_name};
+    <select id="selectUserInfo" resultType="com.app.bean.UserInfo">
+        SELECT openId, userName, userAvatar, createTime, phone, token, privilegeId
+        FROM UserInfo
+        WHERE openId = #{openId};
     </select>
 
     <!-- 向用户表添加信息-->
-    <insert id="insertUserInfo" >
+    <insert id="insertUserInfo">
         INSERT INTO UserInfo(
             openId,
             userName,
             userAvatar,
             createTime,
             phone,
-            token
+            token,
+            privilegeId
         ) VALUES(
                     #{openId},
                     #{userName},
                     #{userAvatar},
                     #{createTime},
                     #{phone},
-                    #{token}
+                    #{token},
+                    #{privilegeId}
                 );
     </insert>
 

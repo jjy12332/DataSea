@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface UserHealthMapper {
      //查询用户
-     UserHealth GetName(String user_name);
+     UserInfo selectUserInfo(String openId);
 
      //新增用户
      void insertUserInfo(UserInfo userInfo);
@@ -39,4 +39,7 @@ public interface UserHealthMapper {
 
      //根据药品id查询药品信息
      UserDrug queryDrugId(@Param("openId") String openId, @Param("drugUuid") String drugUuid);
+
+     //获取用户权限
+
 }

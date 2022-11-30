@@ -24,6 +24,10 @@ public class UserInfo {
     private String createTime ;
     //手机号
     private String phone;
+
     //token值（自己的token，目前先为空）
     private String token;
+
+    //用户权限id(1：普通用户 2：vip用户 3：admin用户)
+    private String privilegeId;
 }

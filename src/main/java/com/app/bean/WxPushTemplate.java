@@ -18,15 +18,15 @@ import java.util.Map;
 public class WxPushTemplate {
 
     //用户openId
-    private String openId;
+    private String touser;
 
     //订阅模板id
-    private  String templateId;
+    private  String template_id;
 
     //消息跳转页面
     private String page;
 
     //推送模板的内容
-    private Map<String,String> data;
+    private Map<String,TemplateData> data;
 
 }
