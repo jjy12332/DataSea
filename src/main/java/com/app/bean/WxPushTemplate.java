@@ -9,7 +9,9 @@ import lombok.ToString;
 import java.util.Map;
 
 /**
- * 微信推送模板
+ *
+ * 微信订阅模板
+ * 与TemplateData配合使用
  */
 @Data
 @ToString

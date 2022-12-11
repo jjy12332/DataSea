@@ -5,6 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
 
+/**
+ *
+ * 所有返回结构都由DoResult承接
+ * 除了Boolean（部分可能也放到DoResult里）
+ *
+ */
 @Data
 @ToString
 public class DoResult<T> {

@@ -8,6 +8,7 @@ import lombok.ToString;
 import javax.persistence.Table;
 
 /**
+ *
  * 用于生成token和解析token的实例
  */
 @Data

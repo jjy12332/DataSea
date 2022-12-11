@@ -7,6 +7,10 @@ import lombok.ToString;
 
 import javax.persistence.Table;
 
+/**
+ * 用户请假的实例
+ * 主要用于用户请假表
+ */
 @Data
 @ToString
 @AllArgsConstructor

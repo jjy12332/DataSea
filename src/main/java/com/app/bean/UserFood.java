@@ -7,6 +7,11 @@ import lombok.ToString;
 
 import javax.persistence.Table;
 
+/**
+ *
+ * 用户食物数据的实例
+ * 主要用于用户食物表
+ */
 @Data
 @ToString
 @AllArgsConstructor

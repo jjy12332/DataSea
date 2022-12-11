@@ -7,6 +7,11 @@ import lombok.ToString;
 
 import javax.persistence.Table;
 
+/**
+ *
+ * 用户健康数据的实例
+ * 主要用于用户健康表
+ */
 @Data
 @ToString
 @AllArgsConstructor

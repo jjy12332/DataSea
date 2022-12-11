@@ -4,9 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
 import javax.persistence.Table;
 
+/**
+ *
+ * 用于药品明细数据的实例
+ * 主要用于用户药品明细表
+ */
 @Data
 @ToString
 @AllArgsConstructor

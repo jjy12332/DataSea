@@ -7,6 +7,11 @@ import lombok.ToString;
 
 import javax.persistence.Table;
 
+/**
+ *
+ * 用户信息实例
+ * 主要用于用户信息表
+ */
 @Data
 @ToString
 @AllArgsConstructor

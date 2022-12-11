@@ -7,6 +7,11 @@ import lombok.ToString;
 
 import javax.persistence.Table;
 
+/**
+ *
+ * 用户药品表
+ * 主要用于用户药品表
+ */
 @Data
 @ToString
 @AllArgsConstructor
