@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,7 +32,8 @@ public class UserHealthServiceImpl implements UserHealthService {
     @Autowired
     private ApiInterfaceService ais;
 
-    Jedis jedis = new Jedis("127.0.0.1", 6379);
+    @Autowired
+    JedisPool jedisPool;// = new Jedis("127.0.0.1", 6379);
 
 
     /**
@@ -39,6 +41,8 @@ public class UserHealthServiceImpl implements UserHealthService {
      * 20221110
      */
     public DoResult AddUser(String jwt,String code, String userName,String userAvatar) throws Exception {
+
+        Jedis jedis = jedisPool.getResource();
 
         //判断前端code是否成功传递到后端
         if (StringUtils.isAllEmpty(code)) {
@@ -75,6 +79,7 @@ public class UserHealthServiceImpl implements UserHealthService {
      * @throws Exception
      */
     public DoResult createToken(String code, String userAvatar, String userName) throws Exception {
+        Jedis jedis = jedisPool.getResource();
         /**
          *  封装url数据
          */
@@ -242,6 +247,7 @@ public class UserHealthServiceImpl implements UserHealthService {
 
         JSONArray jsonArray = JSONArray.parseArray(userDrug);
         for (Object jo : jsonArray) {
+            //将数据插入用户药品实例中
             UserDrug ud = ((JSONObject) jo).toJavaObject(UserDrug.class);
 
             //对eatTime字段进行处理，将【“早上”，“中午”，“晚上”】-> 早上，中午，晚上
@@ -269,11 +275,51 @@ public class UserHealthServiceImpl implements UserHealthService {
             }
             ud.setDrugUuid(UuidUtil.uuid());
             ud.setOpenId(openId);
-            System.out.println(UuidUtil.uuid());
             ud.setDetail(tmp);
+
+            //形成用户药品明细表数据，你并插入
+            this.insertDrugDetail(ud);
+            //插入到药品表中
             emp.insertDrug(ud);
+            //插入药品订阅表中
             sst.insertSubscription(ud);
         }
+    }
+
+    public DoResult insertDrugDetail(UserDrug userDrug){
+        List<UserDrugDetail> list = new ArrayList<>();
+        if(StringUtils.isBlank(userDrug.getEatTime())){
+            return DoResult.error();
+        }
+        //拿到 早上 中午 晚上 的数据 进行解析
+        String[] arrays = userDrug.getEatTime().split(",");
+        for(int i=0 ; i<arrays.length;i++){
+            //创建UserDrugDetail实例
+            UserDrugDetail userDrugDetail = new UserDrugDetail();
+            //给实例赋值
+            userDrugDetail.setOpenId(userDrug.getOpenId());
+            userDrugDetail.setCreateTime(userDrug.getCreateTime());
+            userDrugDetail.setDrugUuid(userDrug.getDrugUuid());
+            userDrugDetail.setDrugName(userDrug.getDrugName());
+            if (arrays[i].equals("早上")) {
+                userDrugDetail.setEatTime(userDrug.getTimeMorning());
+                userDrugDetail.setEatNum(userDrug.getEatMorningNum());
+                userDrugDetail.setDetail(arrays[i] + userDrug.getEatMorning() + "吃" + userDrug.getEatMorningNum() + "片药");
+            } else if (arrays[i].equals("中午")) {
+                userDrugDetail.setEatTime(userDrug.getTimeNoon());
+                userDrugDetail.setEatNum(userDrug.getEatNoonNum());
+                userDrugDetail.setDetail(arrays[i] + userDrug.getEatNoon() + "吃" + userDrug.getEatNoonNum() + "片药");
+            } else {
+                userDrugDetail.setEatTime(userDrug.getTimeNight());
+                userDrugDetail.setEatNum(userDrug.getEatNightNum());
+                userDrugDetail.setDetail(arrays[i] + userDrug.getEatNight() + "吃" + userDrug.getEatNightNum() + "片药");
+            }
+            userDrugDetail.setEatDays(userDrug.getEatDays());
+            emp.insertDrugDetail(userDrugDetail);
+
+        }
+
+        return DoResult.success();
     }
 
     //返回药品

@@ -28,6 +28,8 @@ public interface UserHealthMapper {
      //增加药品
      void insertDrug(UserDrug userDrug);
 
+     void insertDrugDetail(UserDrugDetail userDrugDetail);
+
      //增加菜品
      void insertFood(UserFood userFood);
 

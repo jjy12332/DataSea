@@ -1,7 +1,6 @@
 package com.app.aop;
 
 
-import com.app.Utils.JedisUtil;
 import com.app.Utils.TokenUtil;
 import com.app.bean.DoResult;
 import com.app.bean.UserToken;
@@ -15,6 +14,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
@@ -34,7 +34,12 @@ import java.util.stream.Collectors;
 public class Interceptor {
 
 
-    Jedis jedis = new Jedis("127.0.0.1", 6379);
+//    @Autowired
+//    Jedis jedis;// = new Jedis("127.0.0.1", 6379);
+
+    @Autowired
+    JedisPool jedisPool;
+
 
     /**
      * //Pointcut表示式  @Before("brokerAspect()") 即可
@@ -84,8 +89,11 @@ public class Interceptor {
 //        System.out.println("正在执行的目标方法是: " + joinPoint.getSignature().getName());
 //    }
 
+
     @Around("brokerAspect()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+
+
         System.out.println("这是环绕通知");
         System.out.println("正在执行的目标类是: " + joinPoint.getTarget());
         System.out.println("正在执行的目标方法是: " + joinPoint.getSignature().getName());
@@ -103,6 +111,8 @@ public class Interceptor {
         UserToken infoFromToken = TokenUtil.getInfoFromToken(jwt);
 
         //检查随机token在redis中是否存在，
+
+        Jedis jedis = jedisPool.getResource();
         if (!jedis.exists(infoFromToken.getUuidToken())) {
             //不存在让用户重新登录
             return DoResult.success(500, "该用户以超时，请重新登录", "");

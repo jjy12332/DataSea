@@ -1,0 +1,33 @@
+package com.app.bean;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import javax.persistence.Table;
+
+@Data
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name="用户药品明细表")
+public class UserDrugDetail {
+    //主键iD
+    //用户唯一ID
+    private String openId;
+    //创建时间
+    private String createTime;
+    //药品uuid
+    private String drugUuid;
+    //药品名字
+    private String drugName;
+    //时间
+    private String eatTime;
+    //数量
+    private String eatNum;
+    //天数
+    private String eatDays;
+    //具体描述
+    private String detail;
+}

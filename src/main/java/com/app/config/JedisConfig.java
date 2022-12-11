@@ -1,10 +1,12 @@
 package com.app.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -35,7 +37,7 @@ public class JedisConfig {
     private int minIdle;
 
     @Bean
-    public JedisPool redisPoolFactory() {
+    public JedisPool jedisPool() {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMaxIdle(maxIdle);
         jedisPoolConfig.setMinIdle(minIdle);
@@ -45,5 +47,6 @@ public class JedisConfig {
         log.info("注册ReidsPool成功：redis地址 {} ，端口号 {} ", host, port);
         return jedisPool;
     }
+
 
 }

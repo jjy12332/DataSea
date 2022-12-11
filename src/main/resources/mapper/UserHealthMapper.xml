@@ -120,6 +120,27 @@
                 );
     </insert>
 
+    <!--    -->
+    <insert id="insertDrugDetail">
+        INSERT INTO UserDrugDetail(openId,
+                                   createTime,
+                                   drugUuid,
+                                   drugName,
+                                   eatTime,
+                                   eatNum,
+                                   eatDays,
+                                   detail)
+        VALUES (#{openId},
+                #{createTime},
+                #{drugUuid},
+                #{drugName},
+                #{eatTime},
+                #{eatNum},
+                #{eatDays},
+                #{detail})
+    </insert>
+
+
     <!-- 新增食物 -->
     <insert id="insertFood">
         INSERT INTO UserFood(
