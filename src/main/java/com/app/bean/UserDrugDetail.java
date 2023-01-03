@@ -24,14 +24,17 @@ public class UserDrugDetail {
     private String createTime;
     //药品uuid
     private String drugUuid;
+
+    //订阅状态,1已订阅0未订阅
+    private String subscriptionStatus;
     //药品名字
     private String drugName;
     //时间
     private String eatTime;
+    //corn表达式
+    private String corn;
     //数量
     private String eatNum;
-    //天数
-    private String eatDays;
     //具体描述
     private String detail;
 }

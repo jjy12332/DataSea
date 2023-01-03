@@ -1,9 +1,12 @@
 package com.app.aop;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.app.Utils.TokenUtil;
 import com.app.bean.DoResult;
 import com.app.bean.UserToken;
+import com.app.config.CommonConstants;
+import com.app.service.ApiInterfaceService;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -40,6 +43,8 @@ public class Interceptor {
     @Autowired
     JedisPool jedisPool;
 
+    @Autowired
+    private ApiInterfaceService ais;
 
     /**
      * //Pointcut表示式  @Before("brokerAspect()") 即可
@@ -93,13 +98,13 @@ public class Interceptor {
     @Around("brokerAspect()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
 
-
         System.out.println("这是环绕通知");
         System.out.println("正在执行的目标类是: " + joinPoint.getTarget());
         System.out.println("正在执行的目标方法是: " + joinPoint.getSignature().getName());
 
         //获取请求的请求头，其包含token
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        System.out.println(request);
         String jwt = request.getHeader("jwt");
 
         //如果token为空，则返回错误信息，不允许进入控制层
@@ -111,15 +116,26 @@ public class Interceptor {
         UserToken infoFromToken = TokenUtil.getInfoFromToken(jwt);
 
         //检查随机token在redis中是否存在，
-
         Jedis jedis = jedisPool.getResource();
         if (!jedis.exists(infoFromToken.getUuidToken())) {
             //不存在让用户重新登录
-            return DoResult.success(500, "该用户以超时，请重新登录", "");
+            return DoResult.success(500, "该用户已超时，请重新登录", "");
         }
 
         //将解析出来的数据放入请求头中，为后续方法提供服务
         RequestContextHolder.getRequestAttributes().setAttribute("userId", infoFromToken, 0);
+
+        //封装获取token的url
+        String openIdUrl = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=%s&appid=%s&secret=%s", CommonConstants.grant_type_token,CommonConstants.appid, CommonConstants.secret);
+
+        //获取token (获取小程序全局唯一后台接口调用凭据（access_token）)
+        Object object = ais.get(openIdUrl).getData();
+        String token = (String) JSONObject.parseObject((String) object).get("access_token");
+        if(token == null){
+            return DoResult.error(500,"获取access_token失败","");
+        }
+
+        jedis.set(infoFromToken.getUserId(),token);
 
         //执行方法
         Object proceed = joinPoint.proceed();

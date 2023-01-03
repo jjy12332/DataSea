@@ -1,10 +1,13 @@
 package com.app.service.impl;
 
+import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
+import com.app.bean.UserToken;
 import com.app.mapper.UserMessageMapper;
 import com.app.service.UserMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -31,17 +34,24 @@ public class UserMessageServiceImpl implements UserMessageService {
     }
 
     //查询用户留言,分页查询
-    public List<UserMessage> queryMessage(Integer page, Integer rows){
-        Integer start=(page-1)*rows;
-        List<UserMessage> pList= emp.queryMessage(start,rows);
-        System.out.println(pList);
+    public List<UserMessage> queryMessage(QueryPage queryPage){
+        //从请求头中获取openId
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        queryPage.setOpenId(openId);
+
+        Integer start=(queryPage.getPage()-1)*queryPage.getRows();
+        List<UserMessage> pList= emp.queryMessage(start,queryPage.getRows());
         return pList;
     }
 
     //增加用户留言
     public void addMessage(UserMessage userMessage){
+
+        //从请求头中获取openId
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        userMessage.setOpenId(openId);
+
         try{
-            System.out.println(userMessage);
             emp.addMessage(userMessage);
         }catch (Exception e){
            e.printStackTrace();

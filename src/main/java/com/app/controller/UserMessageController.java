@@ -44,9 +44,9 @@ public class UserMessageController {
 
     //查询留言，分页查询【RequestParam，PathVariable RequestBody】
     @RequestMapping(value = "/emp/queryMessage",method = RequestMethod.POST)
-    public List<UserMessage> message( QueryPage queryPage){
+    public List<UserMessage> message(QueryPage queryPage){
 
-        return emp.queryMessage(queryPage.getPage(),queryPage.getRows());
+        return emp.queryMessage(queryPage);
     }
 
     //增加留言

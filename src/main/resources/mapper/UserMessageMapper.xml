@@ -6,28 +6,23 @@
     <insert id="addMessage">
         insert into UserMessage(
             openId,
-            userName,
-            avatarUrl,
+            createTime,
             content,
-            imageUrl,
-            phoneType,
-            createTime
+            imageUrl
         ) values(
             #{openId},
-            #{userName},
-            #{avatarUrl},
+            #{createTime},
             #{content},
-            #{imageUrl},
-            #{phoneType},
-            #{createTime}
+            #{imageUrl}
+
         );
     </insert>
 
     <select id="queryMessage" resultType="com.app.bean.UserMessage">
-        select * from UserMessage limit #{start},#{rows};
+        select t1.*,t2.userAvatar,t2.phoneType from UserMessage t1 LEFT JOIN UserInfo t2 ON t1.openId = t2.openId limit #{start},#{rows};
     </select>
 
-    <select id="MessageNum" resultType="integer">
+    <select id="MessageNum" resultType='int'>
         select count(1) from UserMessage;
     </select>
 

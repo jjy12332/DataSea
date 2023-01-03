@@ -129,18 +129,4 @@ public class TokenUtil {
     }
 
 
-    public static void main(String[] agars) throws Exception {
-//        UserToken userToken=new UserToken("贾靖渝","lbXAxIjoiMSIsInRlbXAyIjoiMTExMTE","12","1","1");
-//        String token = generateToken(userToken, 0);
-//        System.out.println(token);
-//        UserToken infoFromToken = getInfoFromToken(token);
-//        System.out.println(infoFromToken);
-//        System.out.println(checkToken(token));
-
-//        System.out.println(checkToken("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiLotL7pnZbmuJ0iLCJ1c2VySWQiOiJsYlhBeElqb2lNU0lzSW5SbGJYQXlJam9pTVRFeE1URSIsInByaXZpbGVnZUlkIjoiMTIiLCJ1dWlkVG9rZW4iOiIxIiwidGVtcDIiOiIxIiwiZXhwIjoxNjY5MTE4MTQ3fQ.enYqvSU3HWXFhR1XbBbrvDAJFrk8Tezg4uO7-ptQTBI"));
-
-
-    }
-
-
 }

@@ -19,6 +19,7 @@
             userAvatar,
             createTime,
             phone,
+            phoneType,
             token,
             privilegeId
         ) VALUES(
@@ -27,6 +28,7 @@
                     #{userAvatar},
                     #{createTime},
                     #{phone},
+                    #{phoneType},
                     #{token},
                     #{privilegeId}
                 );
@@ -36,14 +38,12 @@
     <insert id="insertUserHealth">
         INSERT INTO UserHealth(
             openId,
-            userName,
             createTime,
             nowAddress,
             longitude,
             latitude
         ) VALUES(
                     #{openId},
-                    #{userName},
                     #{createTime},
                     #{nowAddress},
                     #{longitude},
@@ -55,7 +55,6 @@
     <insert id="insertData2" >
         INSERT INTO UserLeave(
         openId,
-        userName,
         createTime,
         leaveType,
         leaveCase,
@@ -65,7 +64,6 @@
         <foreach collection="list" index="index" item="item" separator=",">
             (
             #{item.openId},
-            #{item.userName},
             #{item.createTime},
             #{item.leaveType},
             #{item.leaveCase},
@@ -75,94 +73,101 @@
         </foreach>
     </insert>
 
-    <!-- 新增药品 -->
+    <!-- 新增药品总表 -->
     <insert id="insertDrug">
-        INSERT INTO UserDrug(
-            openId,
-            userName,
-            createTime,
-            drugUuid,
-            eatTime,
-            drugName,
-            eatMorning,
-            eatNoon,
-            eatNight,
-            eatDays,
-            eatMorningNum,
-            eatNoonNum,
-            eatNightNum,
-            timeMorning,
-            timeNoon,
-            timeNight,
-            drugPrice,
-            manufacturer,
-            detail
-        ) VALUES(
-                    #{openId},
-                    #{userName},
-                    #{createTime},
-                    #{drugUuid},
-                    #{eatTime},
-                    #{drugName},
-                    #{eatMorning},
-                    #{eatNoon},
-                    #{eatNight},
-                    #{eatDays},
-                    #{eatMorningNum},
-                    #{eatNoonNum},
-                    #{eatNightNum},
-                    #{timeMorning},
-                    #{timeNoon},
-                    #{timeNight},
-                    #{drugPrice},
-                    #{manufacturer},
-                    #{detail}
-                );
+        INSERT INTO UserDrug(openId,
+                             createTime,
+                             drugUuid,
+                             eatTime,
+                             drugName,
+                             eatMorning,
+                             eatNoon,
+                             eatNight,
+                             eatMorningNum,
+                             eatNoonNum,
+                             eatNightNum,
+                             timeMorning,
+                             timeNoon,
+                             timeNight,
+                             eatDays,
+                             endTime,
+                             drugPrice,
+                             manufacturer)
+        VALUES (#{openId},
+                #{createTime},
+                #{drugUuid},
+                #{eatTime},
+                #{drugName},
+                #{eatMorning},
+                #{eatNoon},
+                #{eatNight},
+                #{eatMorningNum},
+                #{eatNoonNum},
+                #{eatNightNum},
+                #{timeMorning},
+                #{timeNoon},
+                #{timeNight},
+                #{eatDays},
+                #{endTime},
+                #{drugPrice},
+                #{manufacturer})
     </insert>
 
-    <!--    -->
+    <!-- 新增药品明细表 -->
     <insert id="insertDrugDetail">
         INSERT INTO UserDrugDetail(openId,
                                    createTime,
                                    drugUuid,
+                                   subscriptionStatus,
                                    drugName,
                                    eatTime,
+                                   corn,
                                    eatNum,
-                                   eatDays,
                                    detail)
         VALUES (#{openId},
                 #{createTime},
                 #{drugUuid},
+                "0",
                 #{drugName},
                 #{eatTime},
+                #{corn},
                 #{eatNum},
-                #{eatDays},
                 #{detail})
     </insert>
 
+    <!--更改订阅状态-->
+    <update id="updateSubscription">
+        update UserDrugDetail
+        set subscriptionStatus = #{status}
+        where openId = #{openId}
+          and drugUuid = #{drugUuid}
+    </update>
+
+    <select id="selectUserDrug" resultType="com.app.bean.UserDrug">
+        SELECT openId,drugUuid FROM UserDrug WHERE subscriptionStatus = '1';
+    </select>
 
     <!-- 新增食物 -->
     <insert id="insertFood">
         INSERT INTO UserFood(
-            userName,
+            openId,
             createTime,
             foodName,
             foodCalorie,
-            foodProbability,
-            openId
+            foodProbability
         ) values(
-                    #{userName},
+                    #{openId},
                     #{createTime},
                     #{foodName},
                     #{foodCalorie},
-                    #{foodProbability},
-                    #{openId}
+                    #{foodProbability}
+
                 );
     </insert>
 
     <!-- 查询用户所有药品，同时携带药品的订阅状态 -->
-    <select id="queryDrug" resultType="com.app.bean.UserDrugResult">
-        select t1.*,t2.subscriptionStatus from UserDrug t1 LEFT JOIN UserDrugSubscription t2 ON t1.openId  = t2.openId and t1.drugUuid = t2.drugUuid WHERE t1.openId = #{openId} limit #{start},#{rows};
+    <select id="queryDrug" resultType="com.app.bean.UserDrug">
+        select * from UserDrug t1 WHERE t1.openId = #{openId} limit #{start},#{rows};
     </select>
 
     <!-- 查询用户药品总数 -->

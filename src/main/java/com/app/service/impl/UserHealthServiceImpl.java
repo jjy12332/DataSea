@@ -2,13 +2,13 @@ package com.app.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.app.Utils.DateUtil;
 import com.app.Utils.TokenUtil;
 import com.app.Utils.UuidUtil;
 import com.app.bean.*;
 import com.app.config.CommonConstants;
 import com.app.mapper.UserHealthMapper;
 import com.app.service.ApiInterfaceService;
-import com.app.service.SubscriptionService;
 import com.app.service.UserHealthService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,6 @@ public class UserHealthServiceImpl implements UserHealthService {
 
     @Autowired
     private UserHealthMapper emp;
-
-    @Autowired
-    private SubscriptionService sst;
 
     @Autowired
     private ApiInterfaceService ais;
@@ -115,8 +112,7 @@ public class UserHealthServiceImpl implements UserHealthService {
         String token = TokenUtil.generateToken(userToken1, 0);
 
         //设置redis值 (健为token，值为用户openId)
-        jedis.set(userToken1.getUuidToken(), openId);
-
+        jedis.setex(userToken1.getUuidToken(), 3600,openId);
         return DoResult.success(200, "用户登录成功请检查", token);
 
     }
@@ -209,7 +205,6 @@ public class UserHealthServiceImpl implements UserHealthService {
         List<com.app.bean.UserLeave> list = new ArrayList<>();
         for (int i = 0; i <= days; i++) {
             com.app.bean.UserLeave user = new UserLeave();
-            user.setUserName(userLeave.getUserName());
             user.setLeaveType(userLeave.getLeaveType());
             user.setLeaveCase(userLeave.getLeaveCase());
             user.setStartTime(format.format(calendar.getTime()));
@@ -254,35 +249,14 @@ public class UserHealthServiceImpl implements UserHealthService {
             String a = ud.getEatTime().replace("[", "").replace("]", "").replace("\"", "");
             ud.setEatTime(a);
 
-            //获取时间段
-            String[] b = ud.getEatTime().split(",");
-            String tmp = "";
-            //如果Detail字段不为空即可执行，为空跳过
-            if (b != null) {
-                for (int i = 0; i < b.length; i++) {
-                    if (b[i].equals("早上")) {
-                        String aa = b[i] + ud.getEatMorning() + "吃" + ud.getEatMorningNum() + "片药";
-                        tmp = tmp.concat(aa);
-                    } else if (b[i].equals("中午")) {
-                        String aa = b[i] + ud.getEatNoon() + "吃" + ud.getEatNoonNum() + "片药";
-                        tmp = tmp.concat(aa);
-                    } else {
-                        String aa = b[i] + ud.getEatNight() + "吃" + ud.getEatNightNum() + "片药";
-                        tmp = tmp.concat(aa);
-                    }
-                    if (i < b.length - 1) tmp = tmp.concat(",");
-                }
-            }
             ud.setDrugUuid(UuidUtil.uuid());
             ud.setOpenId(openId);
-            ud.setDetail(tmp);
+            ud.setEndTime(DateUtil.strToDate(ud.getCreateTime(), Integer.parseInt(ud.getEatDays())));
 
             //形成用户药品明细表数据，你并插入
             this.insertDrugDetail(ud);
             //插入到药品表中
             emp.insertDrug(ud);
-            //插入药品订阅表中
-            sst.insertSubscription(ud);
         }
     }
 
@@ -303,18 +277,20 @@ public class UserHealthServiceImpl implements UserHealthService {
             userDrugDetail.setDrugName(userDrug.getDrugName());
             if (arrays[i].equals("早上")) {
                 userDrugDetail.setEatTime(userDrug.getTimeMorning());
+                userDrugDetail.setCorn(DateUtil.getCron(userDrug.getTimeMorning()));
                 userDrugDetail.setEatNum(userDrug.getEatMorningNum());
                 userDrugDetail.setDetail(arrays[i] + userDrug.getEatMorning() + "吃" + userDrug.getEatMorningNum() + "片药");
             } else if (arrays[i].equals("中午")) {
                 userDrugDetail.setEatTime(userDrug.getTimeNoon());
+                userDrugDetail.setCorn(DateUtil.getCron(userDrug.getTimeNoon()));
                 userDrugDetail.setEatNum(userDrug.getEatNoonNum());
                 userDrugDetail.setDetail(arrays[i] + userDrug.getEatNoon() + "吃" + userDrug.getEatNoonNum() + "片药");
             } else {
                 userDrugDetail.setEatTime(userDrug.getTimeNight());
+                userDrugDetail.setCorn(DateUtil.getCron(userDrug.getTimeNight()));
                 userDrugDetail.setEatNum(userDrug.getEatNightNum());
                 userDrugDetail.setDetail(arrays[i] + userDrug.getEatNight() + "吃" + userDrug.getEatNightNum() + "片药");
             }
-            userDrugDetail.setEatDays(userDrug.getEatDays());
             emp.insertDrugDetail(userDrugDetail);
 
         }
@@ -323,11 +299,11 @@ public class UserHealthServiceImpl implements UserHealthService {
     }
 
     //返回药品
-    public List<UserDrugResult> queryDrug(QueryPage queryPage) {
+    public List<UserDrug> queryDrug(QueryPage queryPage) {
         //从请求头中获取openId
         String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
         Integer start = (queryPage.getPage() - 1) * queryPage.getRows();
-        List<UserDrugResult> pList = emp.queryDrug(start, queryPage.getRows(), openId);
+        List<UserDrug> pList = emp.queryDrug(start, queryPage.getRows(), openId);
         return pList;
     }
 
@@ -345,7 +321,8 @@ public class UserHealthServiceImpl implements UserHealthService {
         //从请求头中获取openId
         String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
         try{
-            sst.updateSubscription(openId,drugUuid,status);
+
+            emp.updateSubscription(openId,drugUuid,status);
             if("1".equals(status)){
                 return DoResult.success(200,"药品订阅成功","1");
             }

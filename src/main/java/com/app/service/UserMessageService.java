@@ -1,5 +1,6 @@
 package com.app.service;
 
+import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,7 +12,7 @@ public interface UserMessageService {
     Integer MessageNum();
 
     //查询用户留言,分页查询
-    List<UserMessage> queryMessage(Integer page, Integer rows);
+    List<UserMessage> queryMessage(QueryPage queryPage);
 
     //增加用户留言
     void addMessage(UserMessage userMessage);

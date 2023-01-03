@@ -21,7 +21,7 @@ public interface UserHealthService {
     void addDrug(String userDrug);
 
     //返回药品
-    List<UserDrugResult> queryDrug(QueryPage queryPage);
+    List<UserDrug> queryDrug(QueryPage queryPage);
 
     //返回药品总数
     Integer drugNum();

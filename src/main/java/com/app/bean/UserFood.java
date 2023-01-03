@@ -21,8 +21,7 @@ public class UserFood {
     //主键iD
     //用户id(唯一键open_id)
     private String openId;
-    //用户名称
-    private String userName;
+
     //创建时间
     private String createTime;
     //食物

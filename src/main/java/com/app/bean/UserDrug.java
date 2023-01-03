@@ -21,12 +21,11 @@ public class UserDrug {
     //主键iD
     //用户ID
     private String openId;
-    //用户名
-    private String userName;
     //创建时间
     private String createTime;
     //药品id
     private String drugUuid;
+
     //什么时间点吃药 早上、中午、晚上
     private String eatTime;
     //药品名字
@@ -37,8 +36,6 @@ public class UserDrug {
     private String eatNoon;
     //晚上饭前/饭后
     private String eatNight;
-    //吃药的天数
-    private String eatDays;
     //早上吃药数量
     private String eatMorningNum;
     //中午吃药数量
@@ -51,11 +48,14 @@ public class UserDrug {
     private String timeNoon;
     //晚上吃药时间
     private String timeNight;
+
+    //吃药的天数
+    private String eatDays;
+    //结束时间
+    private String endTime;
     //药品单价
     private int drugPrice;
     //药品厂商
     private String manufacturer;
-    //具体描述
-    private String detail;
 
 }

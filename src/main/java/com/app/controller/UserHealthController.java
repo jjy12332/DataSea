@@ -68,8 +68,8 @@ public class UserHealthController {
 
     //查询药品，分页查询【RequestParam，PathVariable，RequestBody（post消息体的）】
     @RequestMapping(value = "/emp/queryDrug", method = RequestMethod.POST)
-    public List<UserDrugResult> queryDrug(QueryPage queryPage) {
-        List<UserDrugResult> list = emp.queryDrug(queryPage);
+    public List<UserDrug> queryDrug(QueryPage queryPage) {
+        List<UserDrug> list = emp.queryDrug(queryPage);
         return list;
     }
 

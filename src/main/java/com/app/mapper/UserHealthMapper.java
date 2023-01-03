@@ -25,16 +25,23 @@ public interface UserHealthMapper {
      //用户请假
      void insertData2(List<UserLeave> list);
 
-     //增加药品
+     //增加药品总表
      void insertDrug(UserDrug userDrug);
 
+     //增加药品明细表
      void insertDrugDetail(UserDrugDetail userDrugDetail);
+
+     //更新订阅状态
+     void updateSubscription(@Param("openId") String openId, @Param("drugUuid") String drugUuid,@Param("status") String status);
+
+     //查询订阅情况
+     List<UserDrug> selectUserDrug();
 
      //增加菜品
      void insertFood(UserFood userFood);
 
      //返回药品
-     List<UserDrugResult> queryDrug(@Param("start")Integer start, @Param("rows") Integer rows,@Param("openId") String openId);
+     List<UserDrug> queryDrug(@Param("start")Integer start, @Param("rows") Integer rows,@Param("openId") String openId);
 
      //返回药品总数
      Integer drugNum(String openId);
