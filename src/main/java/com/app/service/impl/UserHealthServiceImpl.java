@@ -17,6 +17,14 @@ import org.springframework.web.context.request.RequestContextHolder;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -156,20 +164,22 @@ public class UserHealthServiceImpl implements UserHealthService {
 
 
     // 打卡用户
-    public void PunchUser(UserHealth userHealth) {
+    public DoResult PunchUser(UserHealth userHealth) {
+        //从请求头中获取openId
+        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        userHealth.setOpenId(openId);
         try {
             //将前台传过来的字符串转为Json
 //            userHealth a = JSON.parseObject(str, userHealth.class);
             emp.insertUserHealth(userHealth);
-            System.out.println("打卡成功");
+            return DoResult.success("打卡成功","");
         } catch (Exception e) {
-            e.printStackTrace();
+            return DoResult.error();
         }
-
     }
 
     //用户请假
-    public void UserLeace(UserLeave userLeave) {
+    public DoResult UserLeace(UserLeave userLeave) {
         /**
          * 请假分为俩种情况
          * 第一种是当天请假，只需要将当天此用户数据存放到请假表即可
@@ -178,6 +188,10 @@ public class UserHealthServiceImpl implements UserHealthService {
          * 目前需要判断第一种还是第二种情况，如果第二种需要将日期数据进行拆分，且计算相应的插入条数
          *
          */
+        //从请求头中获取openId
+        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        userLeave.setOpenId(openId);
+
 
         /*注意，此处数据库有俩张表，如果主要区别是开始日期和结束日期类型不同，这边目前采用Varchar类型，后续变更在说*/
         //创建时间类对象，方便进行计算
@@ -218,6 +232,7 @@ public class UserHealthServiceImpl implements UserHealthService {
         }
         emp.insertData2(list);
 
+        return DoResult.success("请假成功","");
         //如果开始时间和结束时间相等，那么直接插入数据到数据库
 //        //userLeave.getStartTime().compareTo(userLeave.getEndTime())==0，这个也可以对时间进行比较，=0即是相等
 //        if(days==0){
@@ -235,7 +250,7 @@ public class UserHealthServiceImpl implements UserHealthService {
 //    }
 
     //用户增加药品
-    public void addDrug(String userDrug) {
+    public DoResult addDrug(String userDrug) {
 
         //从请求头中获取openId
         String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
@@ -253,11 +268,12 @@ public class UserHealthServiceImpl implements UserHealthService {
             ud.setOpenId(openId);
             ud.setEndTime(DateUtil.strToDate(ud.getCreateTime(), Integer.parseInt(ud.getEatDays())));
 
-            //形成用户药品明细表数据，你并插入
+            //形成用户药品明细表数据
             this.insertDrugDetail(ud);
             //插入到药品表中
             emp.insertDrug(ud);
         }
+        return DoResult.success("药品增加成功","");
     }
 
     public DoResult insertDrugDetail(UserDrug userDrug){
@@ -299,19 +315,20 @@ public class UserHealthServiceImpl implements UserHealthService {
     }
 
     //返回药品
-    public List<UserDrug> queryDrug(QueryPage queryPage) {
+    public DoResult queryDrug(QueryPage queryPage) {
         //从请求头中获取openId
         String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
         Integer start = (queryPage.getPage() - 1) * queryPage.getRows();
         List<UserDrug> pList = emp.queryDrug(start, queryPage.getRows(), openId);
-        return pList;
+        return DoResult.success(pList);
     }
 
     //返回药品总数
-    public Integer drugNum() {
+    public DoResult drugNum() {
         //从请求头中获取openId
         String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
-        return emp.drugNum(openId);
+        int num = emp.drugNum(openId);
+        return DoResult.success("获取总数为"+num,num);
     }
 
 
@@ -435,11 +452,91 @@ public class UserHealthServiceImpl implements UserHealthService {
 
 
     //新增食物
-    public void addFood(String userFood) {
+    public DoResult addFood(String userFood) {
+        //从请求头中获取openId
+        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+
         JSONArray jsonArray = JSONArray.parseArray(userFood);
-        for (Object jo : jsonArray) {
-            UserFood uf = ((JSONObject) jo).toJavaObject(UserFood.class);
-            emp.insertFood(uf);
+        try{
+            for (Object jo : jsonArray) {
+                UserFood uf = ((JSONObject) jo).toJavaObject(UserFood.class);
+                uf.setOpenId(openId);
+                emp.insertFood(uf);
+            }
+            return DoResult.success("食物增加成功","");
+        }catch (Exception e){
+            return DoResult.error("食物增加失败","");
+        }
+
+    }
+
+    /**
+     *
+     * @param
+     * @return
+     */
+    public DoResult lookFile() {
+        JSONObject jsonObject = new JSONObject();
+        //调用脚本
+        List<String> list = exceShell("sh /home/icbc/bin/jjy.sh");
+        //读取文本内容
+        String fileName = "/home/icbc/bin/jjy.txt";
+        Path path = Paths.get(fileName);
+        try {
+            byte[] bytes = Files.readAllBytes(path);
+        } catch (IOException e) {
+            DoResult.error("服务异常联系你弟1","");
+        }
+        try {
+            List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for(int i=0;i<allLines.size();i++){
+                String[] a = allLines.get(i).split(":");
+                jsonObject.put(a[0],a[1]);
+            }
+
+            delLinuxFile("rm -f /home/icbc/bin/jjy.txt");
+            return DoResult.success(jsonObject);
+        } catch (IOException e) {
+            DoResult.error("服务异常联系你弟2","");
+        }
+        return DoResult.error("服务异常联系你弟3","");
+    }
+
+
+
+    /**
+     * 脚本路径或者命令
+     * @param pathOrCommand
+     * @return
+     */
+    public  List<String>  exceShell(String pathOrCommand){
+        ArrayList<String> list = new ArrayList<>();
+        try{
+            Process exec = Runtime.getRuntime().exec(pathOrCommand);
+            int i = exec.waitFor();
+            if(0!=i){
+                list.add("执行错误，error code :"+i);
+            }
+            BufferedInputStream inputStream = new BufferedInputStream(exec.getInputStream());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String li=null;
+            while ((li=reader.readLine())!=null){
+                list.add(li);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public void delLinuxFile(String filePath) {
+//        String cmd = "rm -f" + filePath;//linux指令
+        try {
+            Process process = Runtime.getRuntime().exec(filePath);
+            process.waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

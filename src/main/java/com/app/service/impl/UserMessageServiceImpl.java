@@ -1,5 +1,6 @@
 package com.app.service.impl;
 
+import com.app.bean.DoResult;
 import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
 import com.app.bean.UserToken;
@@ -29,34 +30,34 @@ public class UserMessageServiceImpl implements UserMessageService {
     String str = "";
 
     //查询用户留言总数
-    public Integer MessageNum(){
-        return emp.MessageNum();
+    public DoResult MessageNum(){
+        int num = emp.MessageNum();
+        return DoResult.success(num);
     }
 
     //查询用户留言,分页查询
-    public List<UserMessage> queryMessage(QueryPage queryPage){
+    public DoResult queryMessage(QueryPage queryPage){
         //从请求头中获取openId
         String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
         queryPage.setOpenId(openId);
 
         Integer start=(queryPage.getPage()-1)*queryPage.getRows();
         List<UserMessage> pList= emp.queryMessage(start,queryPage.getRows());
-        return pList;
+        return DoResult.success(pList);
     }
 
     //增加用户留言
-    public void addMessage(UserMessage userMessage){
+    public DoResult addMessage(UserMessage userMessage){
 
         //从请求头中获取openId
         String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
         userMessage.setOpenId(openId);
-
         try{
             emp.addMessage(userMessage);
         }catch (Exception e){
-           e.printStackTrace();
-            System.out.println("插入失败");
+            DoResult.error("留言插入失败","");
         }
+        return DoResult.success("留言插入成功","");
     }
 
     //增加评论

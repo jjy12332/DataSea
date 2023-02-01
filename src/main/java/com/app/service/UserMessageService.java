@@ -1,5 +1,6 @@
 package com.app.service;
 
+import com.app.bean.DoResult;
 import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,13 +10,13 @@ import java.util.List;
 
 public interface UserMessageService {
     //查询用户留言总数
-    Integer MessageNum();
+    DoResult MessageNum();
 
     //查询用户留言,分页查询
-    List<UserMessage> queryMessage(QueryPage queryPage);
+    DoResult queryMessage(QueryPage queryPage);
 
     //增加用户留言
-    void addMessage(UserMessage userMessage);
+    DoResult addMessage(UserMessage userMessage);
 
     //增加评论
     String uploadImage(MultipartFile filePath) throws IOException;

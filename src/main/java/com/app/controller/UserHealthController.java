@@ -35,15 +35,15 @@ public class UserHealthController {
 
     // 打卡用户
     @RequestMapping(value = "/emp/clock", method = RequestMethod.POST)
-    public void PunchUser(UserHealth userHealth) {
+    public DoResult PunchUser(UserHealth userHealth) {
         System.out.println(userHealth.toString());
-        emp.PunchUser(userHealth);
+        return emp.PunchUser(userHealth);
     }
 
     //用户请假
     @RequestMapping(value = "/emp/leave", method = RequestMethod.POST)
-    public void UserLeace(UserLeave userLeave) {
-        emp.UserLeace(userLeave);
+    public DoResult UserLeace(UserLeave userLeave) {
+        return emp.UserLeace(userLeave);
     }
 
     // 查询用户
@@ -55,30 +55,29 @@ public class UserHealthController {
 
     //用户新增药品
     @RequestMapping(value = "/emp/addDrug", method = RequestMethod.POST)
-    public void AddDrug(@RequestBody String userDrug) throws JSONException {
-        emp .addDrug(userDrug);
+    public DoResult AddDrug(@RequestBody String userDrug) throws JSONException {
+        return emp.addDrug(userDrug);
     }
 
     //用户新增菜品
     @RequestMapping(value = "/emp/addMeal", method = RequestMethod.POST)
-    public void AddMeal(@RequestBody String userfood) {
-        System.out.println(userfood);
-        emp.addFood(userfood);
+    public DoResult AddMeal(@RequestBody String userfood) {
+        return emp.addFood(userfood);
     }
 
     //查询药品，分页查询【RequestParam，PathVariable，RequestBody（post消息体的）】
     @RequestMapping(value = "/emp/queryDrug", method = RequestMethod.POST)
-    public List<UserDrug> queryDrug(QueryPage queryPage) {
-        List<UserDrug> list = emp.queryDrug(queryPage);
-        return list;
+    public DoResult queryDrug(QueryPage queryPage) {
+        return emp.queryDrug(queryPage);
     }
 
     //查询药品总条数
     @RequestMapping(value = "/emp/drugNum", method = RequestMethod.POST)
-    public Integer drugNum() {
+    public DoResult drugNum() {
         return emp.drugNum();
     }
 
+    //
     //用户订阅状态接口
     @RequestMapping(value = "/emp/subscription", method = RequestMethod.POST)
     public DoResult subscription(String drugUuid,String status) {
@@ -87,7 +86,9 @@ public class UserHealthController {
         return doResult;
     }
 
-
-
+    @RequestMapping(value = "emp/lookFile", method = RequestMethod.POST)
+    public DoResult lookFile(){
+        return emp.lookFile();
+    }
 
 }

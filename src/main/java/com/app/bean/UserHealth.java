@@ -27,8 +27,8 @@ public class UserHealth {
     //地址
     private String nowAddress;
     //纬度
-    private double longitude;
+    private String longitude;
     //经度
-    private double latitude;
+    private String latitude;
 
 }

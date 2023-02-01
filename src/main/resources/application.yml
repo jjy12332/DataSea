@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8082
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -74,4 +74,11 @@ FTP:
   BASE-PATH: /home/image
   URL: ftp:43.138.55.241/home/image
 
+logging:
+  pattern:
+    console: "%d - %msg%n"
+  file:
+    path: /home/jar/logs/log.log
+  level:
+    root: info
 

@@ -1,5 +1,6 @@
 package com.app.controller;
 
+import com.app.bean.DoResult;
 import com.app.bean.QueryPage;
 import com.app.bean.UserMessage;
 import com.app.config.FtpUtil;
@@ -44,20 +45,20 @@ public class UserMessageController {
 
     //查询留言，分页查询【RequestParam，PathVariable RequestBody】
     @RequestMapping(value = "/emp/queryMessage",method = RequestMethod.POST)
-    public List<UserMessage> message(QueryPage queryPage){
+    public DoResult message(QueryPage queryPage){
 
         return emp.queryMessage(queryPage);
     }
 
     //增加留言
     @RequestMapping(value = "/emp/addmessage",method = RequestMethod.POST)
-    public void addmessage(UserMessage userMessage){
-        emp.addMessage(userMessage);
+    public DoResult addmessage(UserMessage userMessage){
+        return emp.addMessage(userMessage);
     }
 
     //查询留言总条数
     @RequestMapping(value = "/emp/MessageNum",method = RequestMethod.POST)
-    public Integer MessageNum(){
+    public DoResult MessageNum(){
         return emp.MessageNum();
     }
 

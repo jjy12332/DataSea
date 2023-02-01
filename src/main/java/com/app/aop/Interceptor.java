@@ -109,7 +109,7 @@ public class Interceptor {
 
         //如果token为空，则返回错误信息，不允许进入控制层
         if(StringUtils.isBlank(jwt)){
-            return DoResult.error(999,"token有问题，请获取token","");
+            return DoResult.error(500,"token有问题，请获取token","");
         }
 
         //解析token
