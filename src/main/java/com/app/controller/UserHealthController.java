@@ -55,13 +55,37 @@ public class UserHealthController {
 
     //用户新增药品
     @RequestMapping(value = "/emp/addDrug", method = RequestMethod.POST)
-    public DoResult AddDrug(@RequestBody String userDrug) throws JSONException {
+    public DoResult AddDrug(UserDrug userDrug) {
         return emp.addDrug(userDrug);
+    }
+
+    //删除药品
+    @RequestMapping(value = "/emp/deleteDrug", method = RequestMethod.POST)
+    public DoResult deleteDrug(@RequestParam String drugUuid) {
+        return emp.deleteDrug(drugUuid);
+    }
+
+    //修改药品天数
+    @RequestMapping(value = "/emp/updateDrugDays", method = RequestMethod.POST)
+    public DoResult updateDrugDays(@RequestParam String drugUuid,String eatDays,String createTime) {
+        return emp.updateDrugDays(drugUuid,eatDays,createTime);
+    }
+
+    //用户新增药品详细信息
+    @RequestMapping(value = "/emp/addDrugDetail", method = RequestMethod.POST)
+    public DoResult AddDrugDetail(UserDrugDetail userDrugDetail) {//TODO 重写
+        return emp.addDrugDetail(userDrugDetail);
+    }
+
+    //删除药品详细信息时间
+    @RequestMapping(value = "/emp/deleteDrugDetailDate", method = RequestMethod.POST)
+    public DoResult deleteDrugDetailDate(@RequestParam String drugUuid,String subId) {
+        return emp.deleteDrugDetailDate(drugUuid,subId);
     }
 
     //用户新增菜品
     @RequestMapping(value = "/emp/addMeal", method = RequestMethod.POST)
-    public DoResult AddMeal(@RequestBody String userfood) {
+    public DoResult AddMeal(@RequestBody String userfood) { //TODO 重写
         return emp.addFood(userfood);
     }
 
@@ -77,15 +101,21 @@ public class UserHealthController {
         return emp.drugNum();
     }
 
+    //查询药品详细信息
+    @RequestMapping(value = "/emp/queryDrugDetail", method = RequestMethod.POST)
+    public DoResult queryDrugDetail(@RequestParam String drugUuid) {
+        return emp.queryDrugDetail(drugUuid);
+    }
+
     //
     //用户订阅状态接口
     @RequestMapping(value = "/emp/subscription", method = RequestMethod.POST)
-    public DoResult subscription(String drugUuid,String status) {
-        DoResult doResult = emp.subscription(drugUuid, status);
-        System.out.println(doResult);
+    public DoResult subscription(@RequestParam String drugUuid,String subId,String status) {
+        DoResult doResult = emp.subscription(drugUuid,subId,status);
         return doResult;
     }
 
+    //给老姐的接口
     @RequestMapping(value = "emp/lookFile", method = RequestMethod.POST)
     public DoResult lookFile(){
         return emp.lookFile();

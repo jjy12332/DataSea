@@ -78,17 +78,7 @@
         INSERT INTO UserDrug(openId,
                              createTime,
                              drugUuid,
-                             eatTime,
                              drugName,
-                             eatMorning,
-                             eatNoon,
-                             eatNight,
-                             eatMorningNum,
-                             eatNoonNum,
-                             eatNightNum,
-                             timeMorning,
-                             timeNoon,
-                             timeNight,
                              eatDays,
                              endTime,
                              drugPrice,
@@ -96,44 +86,58 @@
         VALUES (#{openId},
                 #{createTime},
                 #{drugUuid},
-                #{eatTime},
                 #{drugName},
-                #{eatMorning},
-                #{eatNoon},
-                #{eatNight},
-                #{eatMorningNum},
-                #{eatNoonNum},
-                #{eatNightNum},
-                #{timeMorning},
-                #{timeNoon},
-                #{timeNight},
                 #{eatDays},
                 #{endTime},
                 #{drugPrice},
                 #{manufacturer})
     </insert>
 
+    <!--  删除药品  -->
+    <delete id="deleteDrug">
+        DELETE FROM UserDrug WHERE  openId = #{openId} AND drugUuid = #{drugUuid};
+    </delete>
+
+    <!--  删除药品详细表 的药品  -->
+    <delete id="deleteDrugDetail">
+        DELETE FROM UserDrugDetail WHERE  openId = #{openId} AND drugUuid = #{drugUuid};
+    </delete>
+
+    <!--  修改药品天数  -->
+    <update id="updateDrugDays">
+        UPDATE UserDrug SET eatDays = #{eatDays},endTime = #{endTime} WHERE openId = #{openId} AND drugUuid = #{drugUuid};
+    </update>
+
     <!-- 新增药品明细表 -->
     <insert id="insertDrugDetail">
         INSERT INTO UserDrugDetail(openId,
                                    createTime,
                                    drugUuid,
-                                   subscriptionStatus,
                                    drugName,
-                                   eatTime,
+                                   subId,
+                                   subscriptionStatus,
                                    corn,
+                                   eatTime,
                                    eatNum,
+                                   eatFrontBack,
                                    detail)
         VALUES (#{openId},
                 #{createTime},
                 #{drugUuid},
-                "0",
                 #{drugName},
-                #{eatTime},
+                #{subId},
+                "0",
                 #{corn},
+                #{eatTime},
                 #{eatNum},
+                #{eatFrontBack},
                 #{detail})
     </insert>
+
+    <!--  删除药品详细信息  -->
+    <delete id="deleteDrugDetailDate">
+        DELETE FROM UserDrugDetail WHERE  openId = #{openId} AND drugUuid = #{drugUuid} AND subId = #{subId}
+    </delete>
 
     <!--更改订阅状态-->
     <update id="updateSubscription">
@@ -141,11 +145,8 @@
         set subscriptionStatus = #{status}
         where openId = #{openId}
           and drugUuid = #{drugUuid}
+          and subId = #{subId}
     </update>
-
-    <select id="selectUserDrug" resultType="com.app.bean.UserDrug">
-        SELECT openId,drugUuid FROM UserDrug WHERE subscriptionStatus = '1';
-    </select>
 
     <!-- 新增食物 -->
     <insert id="insertFood">
@@ -176,26 +177,54 @@
     </select>
 
     <!-- 根据用户id和药品id 查询指定药品 -->
-    <select id="queryDrugId" resultType="com.app.bean.UserDrug">
+    <select id="queryDrugDetail" resultType="com.app.bean.UserDrugDetail">
         select openId,
-               userName,
                createTime,
                drugUuid,
-               eatTime,
                drugName,
-               eatMorning,
-               eatNoon,
-               eatNight,
-               eatDays,
-               eatMorningNum,
-               eatNoonNum,
-               eatNightNum,
-               timeMorning,
-               timeNoon,
-               timeNight,
-               drugPrice,
-               manufacturer,
+               subId,
+               subscriptionStatus,
+               corn,
+               eatTime,
+               eatNum,
+               eatFrontBack,
                detail
+        from UserDrugDetail t1
+        WHERE openId = #{openId}
+          and drugUuid = #{drugUuid}
+    </select>
+
+    <!--  查询药品已订阅的时间，返回subId  -->
+    <select id="queryDrugDetailSubId" resultType="string">
+        SELECT subId
+          FROM UserDrugDetail t1
+         WHERE openId = #{openId}
+           and drugUuid = #{drugUuid}
+           and subscriptionStatus = "1"
+    </select>
+
+    <!-- 订阅药品，查询药品详细信息 -->
+    <select id="subscriptionDrug" resultType="com.app.bean.UserDrugDetail">
+        select openId,
+               createTime,
+               drugUuid,
+               drugName,
+               subId,
+               subscriptionStatus,
+               corn,
+               eatTime,
+               eatNum,
+               eatFrontBack,
+               detail
+        from UserDrugDetail t1
+        WHERE openId = #{openId}
+          and drugUuid = #{drugUuid}
+          AND subId = #{subId}
+    </select>
+
+    <!-- 根据用户id和药品id 查询指定药品名字 -->
+    <select id="queryDrugName" resultType="string">
+        select drugName
         from UserDrug t1
         WHERE openId = #{openId}
           and drugUuid = #{drugUuid}

@@ -10,7 +10,8 @@ import javax.persistence.Table;
 /**
  *
  * 分页查询的实例，为了进行复用
- *
+ * @AllArgsConstructor
+ * @NoArgsConstructor
  */
 
 @Data

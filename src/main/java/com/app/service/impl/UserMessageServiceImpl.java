@@ -15,6 +15,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -43,7 +44,7 @@ public class UserMessageServiceImpl implements UserMessageService {
 
         Integer start=(queryPage.getPage()-1)*queryPage.getRows();
         List<UserMessage> pList= emp.queryMessage(start,queryPage.getRows());
-        return DoResult.success(pList);
+        return DoResult.success("留言成功",pList);
     }
 
     //增加用户留言
@@ -51,6 +52,7 @@ public class UserMessageServiceImpl implements UserMessageService {
 
         //从请求头中获取openId
         String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+
         userMessage.setOpenId(openId);
         try{
             emp.addMessage(userMessage);

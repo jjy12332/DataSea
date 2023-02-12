@@ -10,6 +10,7 @@ import com.app.config.CommonConstants;
 import com.app.mapper.UserHealthMapper;
 import com.app.service.ApiInterfaceService;
 import com.app.service.UserHealthService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@Slf4j
 @Service
 public class UserHealthServiceImpl implements UserHealthService {
 
@@ -40,12 +42,14 @@ public class UserHealthServiceImpl implements UserHealthService {
     @Autowired
     JedisPool jedisPool;// = new Jedis("127.0.0.1", 6379);
 
+    @Autowired
+    QuartzManagerServiceImpl quartzManager;
 
     /**
      * 新增用户
      * 20221110
      */
-    public DoResult AddUser(String jwt,String code, String userName,String userAvatar) throws Exception {
+    public DoResult AddUser(String jwt, String code, String userName, String userAvatar) throws Exception {
 
         Jedis jedis = jedisPool.getResource();
 
@@ -64,6 +68,7 @@ public class UserHealthServiceImpl implements UserHealthService {
             UserToken userToken = TokenUtil.getInfoFromToken(jwt);
             //检查随机token在redis中是否存在，
             if (jedis.exists(userToken.getUuidToken())) {
+
                 //用户登录成功
                 return DoResult.success(200, "老用户直接进入首页", jwt);
             } else {//随机token不存在（目前可以给用户重新获取token）
@@ -120,7 +125,7 @@ public class UserHealthServiceImpl implements UserHealthService {
         String token = TokenUtil.generateToken(userToken1, 0);
 
         //设置redis值 (健为token，值为用户openId)
-        jedis.setex(userToken1.getUuidToken(), 3600,openId);
+        jedis.setex(userToken1.getUuidToken(), 3600, openId);
         return DoResult.success(200, "用户登录成功请检查", token);
 
     }
@@ -166,13 +171,13 @@ public class UserHealthServiceImpl implements UserHealthService {
     // 打卡用户
     public DoResult PunchUser(UserHealth userHealth) {
         //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
         userHealth.setOpenId(openId);
         try {
             //将前台传过来的字符串转为Json
 //            userHealth a = JSON.parseObject(str, userHealth.class);
             emp.insertUserHealth(userHealth);
-            return DoResult.success("打卡成功","");
+            return DoResult.success("打卡成功", "");
         } catch (Exception e) {
             return DoResult.error();
         }
@@ -189,7 +194,7 @@ public class UserHealthServiceImpl implements UserHealthService {
          *
          */
         //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
         userLeave.setOpenId(openId);
 
 
@@ -232,7 +237,7 @@ public class UserHealthServiceImpl implements UserHealthService {
         }
         emp.insertData2(list);
 
-        return DoResult.success("请假成功","");
+        return DoResult.success("请假成功", "");
         //如果开始时间和结束时间相等，那么直接插入数据到数据库
 //        //userLeave.getStartTime().compareTo(userLeave.getEndTime())==0，这个也可以对时间进行比较，=0即是相等
 //        if(days==0){
@@ -243,81 +248,126 @@ public class UserHealthServiceImpl implements UserHealthService {
     }
 
 
-
     // 查询用户
 //    public UserHealth GetUser(String user_name) {
 //        return emp.GetName(user_name);
 //    }
 
     //用户增加药品
-    public DoResult addDrug(String userDrug) {
+    public DoResult addDrug(UserDrug userDrug) {
 
         //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
 
-        JSONArray jsonArray = JSONArray.parseArray(userDrug);
-        for (Object jo : jsonArray) {
-            //将数据插入用户药品实例中
-            UserDrug ud = ((JSONObject) jo).toJavaObject(UserDrug.class);
+        //将数据插入用户药品实例中,之前传递的是string数值，现在已变更，代码先留着
+//        UserDrug ud = ((JSONObject) jo).toJavaObject(UserDrug.class);
 
-            //对eatTime字段进行处理，将【“早上”，“中午”，“晚上”】-> 早上，中午，晚上
-            String a = ud.getEatTime().replace("[", "").replace("]", "").replace("\"", "");
-            ud.setEatTime(a);
-
-            ud.setDrugUuid(UuidUtil.uuid());
-            ud.setOpenId(openId);
-            ud.setEndTime(DateUtil.strToDate(ud.getCreateTime(), Integer.parseInt(ud.getEatDays())));
-
-            //形成用户药品明细表数据
-            this.insertDrugDetail(ud);
-            //插入到药品表中
-            emp.insertDrug(ud);
-        }
-        return DoResult.success("药品增加成功","");
+        userDrug.setDrugUuid(UuidUtil.uuid());
+        userDrug.setEndTime(DateUtil.strToDate(userDrug.getCreateTime(), Integer.parseInt(userDrug.getEatDays())));
+        userDrug.setOpenId(openId);
+        //插入到药品表中
+        emp.insertDrug(userDrug);
+        return DoResult.success("药品增加成功", "");
     }
 
-    public DoResult insertDrugDetail(UserDrug userDrug){
-        List<UserDrugDetail> list = new ArrayList<>();
-        if(StringUtils.isBlank(userDrug.getEatTime())){
-            return DoResult.error();
-        }
-        //拿到 早上 中午 晚上 的数据 进行解析
-        String[] arrays = userDrug.getEatTime().split(",");
-        for(int i=0 ; i<arrays.length;i++){
-            //创建UserDrugDetail实例
-            UserDrugDetail userDrugDetail = new UserDrugDetail();
-            //给实例赋值
-            userDrugDetail.setOpenId(userDrug.getOpenId());
-            userDrugDetail.setCreateTime(userDrug.getCreateTime());
-            userDrugDetail.setDrugUuid(userDrug.getDrugUuid());
-            userDrugDetail.setDrugName(userDrug.getDrugName());
-            if (arrays[i].equals("早上")) {
-                userDrugDetail.setEatTime(userDrug.getTimeMorning());
-                userDrugDetail.setCorn(DateUtil.getCron(userDrug.getTimeMorning()));
-                userDrugDetail.setEatNum(userDrug.getEatMorningNum());
-                userDrugDetail.setDetail(arrays[i] + userDrug.getEatMorning() + "吃" + userDrug.getEatMorningNum() + "片药");
-            } else if (arrays[i].equals("中午")) {
-                userDrugDetail.setEatTime(userDrug.getTimeNoon());
-                userDrugDetail.setCorn(DateUtil.getCron(userDrug.getTimeNoon()));
-                userDrugDetail.setEatNum(userDrug.getEatNoonNum());
-                userDrugDetail.setDetail(arrays[i] + userDrug.getEatNoon() + "吃" + userDrug.getEatNoonNum() + "片药");
-            } else {
-                userDrugDetail.setEatTime(userDrug.getTimeNight());
-                userDrugDetail.setCorn(DateUtil.getCron(userDrug.getTimeNight()));
-                userDrugDetail.setEatNum(userDrug.getEatNightNum());
-                userDrugDetail.setDetail(arrays[i] + userDrug.getEatNight() + "吃" + userDrug.getEatNightNum() + "片药");
-            }
-            emp.insertDrugDetail(userDrugDetail);
+    /**
+     * 删除 药品
+     *
+     * @param drugUuid
+     * @return
+     */
+    public DoResult deleteDrug(String drugUuid) {
+        //从请求头中获取openId
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
 
+        try {
+            //先取消订阅线程任务
+            //查询所有此药品的时间（已订阅状态）
+            List<String> list = emp.queryDrugDetailSubId(openId,drugUuid);
+            for(int i=0;i<list.size();i++){
+                quartzManager.removeJob(list.get(i));
+                log.info("删除job任务成功:"+list.get(i));
+            }
+
+            //删除药品表
+            emp.deleteDrug(openId, drugUuid);
+            //同时删除药品详细表里的数据，药品粒度
+            emp.deleteDrugDetail(openId, drugUuid);
+            return DoResult.success("删除成功", "");
+        } catch (Exception e) {
+            return DoResult.error("请重新删除", "");
         }
+    }
+
+    //修改天数
+    public DoResult updateDrugDays(String drugUuid, String eatDays, String createTime) {
+        //从请求头中获取openId
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
+        String endTime = DateUtil.strToDate(createTime, Integer.parseInt(eatDays));
+        try {
+            emp.updateDrugDays(openId, drugUuid, eatDays, endTime);
+        } catch (Exception e) {
+            return DoResult.error("修改失败", "");
+        }
+        return DoResult.success();
+    }
+
+    /**
+     * 添加药品详细信息
+     */
+    public DoResult addDrugDetail(UserDrugDetail userDrugDetail) {
+        if (StringUtils.isBlank(userDrugDetail.getEatTime())) {
+            return DoResult.error("订阅时间不能为空", "");
+        }
+        if (StringUtils.isBlank(userDrugDetail.getDrugUuid())) {
+            return DoResult.error("请重新进入药品订阅页面", "");
+        }
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
+        String queryDrugName = emp.queryDrugName(openId, userDrugDetail.getDrugUuid());
+        //给实例赋值
+        userDrugDetail.setOpenId(openId);
+
+        userDrugDetail.setSubId(UuidUtil.subUuid(userDrugDetail.getDrugUuid(), userDrugDetail.getEatTime()));
+        userDrugDetail.setDrugName(userDrugDetail.getDrugName());
+        userDrugDetail.setDrugName(queryDrugName);
+        userDrugDetail.setCorn(DateUtil.getCron(userDrugDetail.getEatTime()));
+
+        userDrugDetail.setDetail(userDrugDetail.getEatTime() + "" + userDrugDetail.getEatFrontBack() + "吃" + userDrugDetail.getEatNum() + "(颗/粒/勺)药");
+
+        emp.insertDrugDetail(userDrugDetail);
+
 
         return DoResult.success();
+    }
+
+    /**
+     * 删除药品详细信息
+     *
+     * @param drugUuid
+     * @param subId
+     * @return
+     */
+    public DoResult deleteDrugDetailDate(String drugUuid, String subId) {
+        //获取用户id
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
+
+        try {
+            //先取消订阅
+            quartzManager.removeJob(subId);
+            log.info("删除job任务成功:"+subId);
+            //删除数据库数据
+            emp.deleteDrugDetailDate(openId, drugUuid, subId);
+            return DoResult.success("删除药品时间成功", "");
+        } catch (Exception e) {
+            return DoResult.error("删除药品时间失败", "");
+        }
+
     }
 
     //返回药品
     public DoResult queryDrug(QueryPage queryPage) {
         //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
         Integer start = (queryPage.getPage() - 1) * queryPage.getRows();
         List<UserDrug> pList = emp.queryDrug(start, queryPage.getRows(), openId);
         return DoResult.success(pList);
@@ -326,152 +376,154 @@ public class UserHealthServiceImpl implements UserHealthService {
     //返回药品总数
     public DoResult drugNum() {
         //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
         int num = emp.drugNum(openId);
-        return DoResult.success("获取总数为"+num,num);
+        return DoResult.success("获取总数为" + num, num);
     }
 
+    //查询药品详细信息
+    public DoResult queryDrugDetail(String drugUuid) {
+        //从请求头中获取openId
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
+        List<UserDrugDetail> pList = emp.queryDrugDetail(openId, drugUuid);
+        return DoResult.success(pList);
+    }
 
     //用户订阅功能（药品订阅）
-    public DoResult subscription(String drugUuid, String status) {
+    public DoResult subscription(String drugUuid, String subId, String status) {
 
-        //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
-        try{
+        HashMap<String,String> map = new HashMap<>();
 
-            emp.updateSubscription(openId,drugUuid,status);
-            if("1".equals(status)){
-                return DoResult.success(200,"药品订阅成功","1");
-            }
-            return DoResult.success(200,"药品订阅成功","0");
-
-        }catch (Exception e){
-            return DoResult.error(500,"药品订阅失败","");
+        if (StringUtils.isBlank(drugUuid)) {
+            return DoResult.error("药品id为空", "");
+        }
+        if (StringUtils.isBlank(subId)) {
+            return DoResult.error("订阅id为空", "");
+        }
+        if (StringUtils.isBlank(status)) {
+            return DoResult.error("状态为空", "");
         }
 
+        //从请求头中获取openId
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
+
+
+
+        //获取用户准备订阅的药品信息
+        UserDrugDetail userDrugDetail = emp.subscriptionDrug(openId, drugUuid, subId);
+
+
+        try {
+            //不管订阅还是取订，都需要去数据库更新数据
+            emp.updateSubscription(openId, drugUuid, subId, status);
+
+            if ("1".equals(status)) {
+                String cron = "0/30 * * * * ?";
+
+                map.put("jobName",subId);
+                map.put("openId",userDrugDetail.getOpenId());
+                map.put("drugName",userDrugDetail.getDrugName());
+                map.put("eatTime",userDrugDetail.getEatTime());
+                map.put("eatNum",userDrugDetail.getEatNum());
+                map.put("detail",userDrugDetail.getDetail());
+
+                quartzManager.addJob(subId, MyJob.class,userDrugDetail.getCorn(),map);
+
+                log.info("job添加成功");
+
+                return DoResult.success("药品订阅成功", "1");
+            }
+            if ("0".equals(status)) {
+
+                quartzManager.removeJob(subId);
+                log.info("删除job任务成功:"+subId);
+                return DoResult.success("药品取消订阅", "0");
+            }
+        } catch (Exception e) {
+            return DoResult.error("操作失败", "");
+        }
+
+        return DoResult.error();
     }
 
 
-//    //用户订阅功能（药品订阅）
-//    public DoResult subscription(String drugUuid, String status) {
-//
-//        //从请求头中获取openId
-//        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
-//
-//        //封装获取token的url
-//        String openIdUrl = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=%s&appid=%s&secret=%s", CommonConstants.grant_type_token,CommonConstants.appid, CommonConstants.secret);
-//
-//        //获取token (获取小程序全局唯一后台接口调用凭据（access_token）)
-//        Object object = ais.get(openIdUrl).getData();
-//        String token = (String) JSONObject.parseObject((String) object).get("access_token");
-//        if(token == null){
-//            return DoResult.error(500,"获取access_token失败","");
-//        }
-//
-//
-//        //订阅模板
-//        String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + token;
-//        //拼接推送的模版
-//        WxPushTemplate wxMsgDto = new WxPushTemplate();
-//        wxMsgDto.setTouser(openId);
-//        wxMsgDto.setTemplate_id(CommonConstants.model_id);
-//
-//        //获取用户准备订阅的药品信息
-//        UserDrug userDrug = emp.queryDrugId(openId, drugUuid);
-////        List<Map<String, TemplateData>> listMap = new ArrayList<>();
-//
-//
-//        String[] b = userDrug.getEatTime().split(",");
-//        Map<String, TemplateData> map = new LinkedHashMap<>(5);
-//
-//        //药品名字
-//        map.put("thing1", new TemplateData("jjy"));
-//        //服用时间
-//        map.put("time2", new TemplateData("2022-01-13 02:31:36"));
-//        //服用剂量
-//        map.put("thing3", new TemplateData("1"));
-//        //用药周期
-//        map.put("time11", new TemplateData("2022-01-13 02:31:36"));
-//        //用药建议
-//        map.put("thing4", new TemplateData("早上1片"));
-//
-//        wxMsgDto.setData(map);
-////        for (int i = 0; i < b.length; i++) {
-////            Map<String, String> map = new LinkedHashMap<>(5);
-////
-////            //药品名字
-////            map.put("thing1",userDrug.getDrugName());
-////
-////
-////
-////            if("早上".equals(b[i])){
-////                //服用时间
-////                map.put("time2",userDrug.getTimeMorning());
-////                //服用剂量
-////                map.put("thing3",userDrug.getEatMorningNum());
-////            }
-////            if("中午".equals(b[i])){
-////                //服用时间
-////                map.put("time2",userDrug.getTimeNoon());
-////                //服用剂量
-////                map.put("thing3",userDrug.getEatNoonNum());
-////            }
-////            if("晚上".equals(b[i])){
-////                //服用时间
-////                map.put("time2",userDrug.getTimeNight());
-////                //服用剂量
-////                map.put("thing3",userDrug.getEatNightNum());
-////            }
-////
-////            //用药周期
-////            map.put("time11",userDrug.getCreateTime());
-////            //用药建议
-////            map.put("thing4",userDrug.getDetail());
-////
-////
-////            listMap.add(map);
-////        }
-////        listMap.add(map);
-//
-//        System.out.println(System.currentTimeMillis());
-//
-//        //开始发送推送api（此处循环发送并确保都订阅成功）
-////        for (int i = 0; i < listMap.size(); i++) {
-//            try {
-////                wxMsgDto.setData(listMap.get(i));
-//                ais.postKeyValue(url, wxMsgDto);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-////                return DoResult.error("订阅失败，失败数量为" + Math.abs(i - 3));
-//            }
-////        }
-//
-//
-//        return DoResult.success();
-//    }
+    /**
+     * 用户订阅功能（药品订阅）
+     * 注意接口超时问题！！！！！！！！！！！
+     *
+     * @return
+     */
+    public void subscriptionDrug(String openId, String drugName,String eatTime,String eatNum,String detail) {
+
+        //从请求头中获取openId
+//        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
+
+        //封装获取token的url
+        String openIdUrl = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=%s&appid=%s&secret=%s", CommonConstants.grant_type_token, CommonConstants.appid, CommonConstants.secret);
+
+        //获取token (获取小程序全局唯一后台接口调用凭据（access_token）)
+        //注意：！！！！！！订阅一次就要将token放入redis中，判断token的生命周期 目前没有实现
+        Object object = ais.get(openIdUrl).getData();
+        String token = (String) JSONObject.parseObject((String) object).get("access_token");
+        if (token == null) {
+            log.info("获取access_token失败");
+            return;
+        }
+
+
+        //订阅模板
+        String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + token;
+        //拼接推送的模版
+        WxPushTemplate wxMsgDto = new WxPushTemplate();
+        wxMsgDto.setTouser(openId);
+        wxMsgDto.setTemplate_id(CommonConstants.model_id);
+
+        //定义模板的Map LinkedHashMap可以进行排序
+        Map<String, TemplateData> map = new LinkedHashMap<>(5);
+
+        //药品名字
+        map.put("thing1", new TemplateData(drugName));
+        //服用时间
+        map.put("time2", new TemplateData(eatTime));
+        //服用剂量
+        map.put("thing3", new TemplateData(eatNum));
+        //用药周期
+        map.put("time11", new TemplateData("1998-06-15 00:00:00"));
+        //用药建议
+        map.put("thing4", new TemplateData(detail));
+
+        wxMsgDto.setData(map);
+
+        //开始发送推送api
+        try {
+            ais.postKeyValue(url, wxMsgDto);
+        } catch (Exception e) {
+            log.info("调用推送api失败，错误信息："+e);
+            return;
+        }
+    }
 
 
     //新增食物
     public DoResult addFood(String userFood) {
         //从请求头中获取openId
-        String openId = ((UserToken)RequestContextHolder.getRequestAttributes().getAttribute("userId",0)).getUserId();
+        String openId = ((UserToken) RequestContextHolder.getRequestAttributes().getAttribute("userId", 0)).getUserId();
 
         JSONArray jsonArray = JSONArray.parseArray(userFood);
-        try{
+        try {
             for (Object jo : jsonArray) {
                 UserFood uf = ((JSONObject) jo).toJavaObject(UserFood.class);
                 uf.setOpenId(openId);
                 emp.insertFood(uf);
             }
-            return DoResult.success("食物增加成功","");
-        }catch (Exception e){
-            return DoResult.error("食物增加失败","");
+            return DoResult.success("食物增加成功", "");
+        } catch (Exception e) {
+            return DoResult.error("食物增加失败", "");
         }
 
     }
 
     /**
-     *
      * @param
      * @return
      */
@@ -485,45 +537,45 @@ public class UserHealthServiceImpl implements UserHealthService {
         try {
             byte[] bytes = Files.readAllBytes(path);
         } catch (IOException e) {
-            DoResult.error("服务异常联系你弟1","");
+            DoResult.error("服务异常联系你弟1", "");
         }
         try {
             List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
-            for(int i=0;i<allLines.size();i++){
+            for (int i = 0; i < allLines.size(); i++) {
                 String[] a = allLines.get(i).split(":");
-                jsonObject.put(a[0],a[1]);
+                jsonObject.put(a[0], a[1]);
             }
 
             delLinuxFile("rm -f /home/icbc/bin/jjy.txt");
             return DoResult.success(jsonObject);
         } catch (IOException e) {
-            DoResult.error("服务异常联系你弟2","");
+            DoResult.error("服务异常联系你弟2", "");
         }
-        return DoResult.error("服务异常联系你弟3","");
+        return DoResult.error("服务异常联系你弟3", "");
     }
-
 
 
     /**
      * 脚本路径或者命令
+     *
      * @param pathOrCommand
      * @return
      */
-    public  List<String>  exceShell(String pathOrCommand){
+    public List<String> exceShell(String pathOrCommand) {
         ArrayList<String> list = new ArrayList<>();
-        try{
+        try {
             Process exec = Runtime.getRuntime().exec(pathOrCommand);
             int i = exec.waitFor();
-            if(0!=i){
-                list.add("执行错误，error code :"+i);
+            if (0 != i) {
+                list.add("执行错误，error code :" + i);
             }
             BufferedInputStream inputStream = new BufferedInputStream(exec.getInputStream());
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String li=null;
-            while ((li=reader.readLine())!=null){
+            String li = null;
+            while ((li = reader.readLine()) != null) {
                 list.add(li);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

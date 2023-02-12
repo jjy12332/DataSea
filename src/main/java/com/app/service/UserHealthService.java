@@ -18,7 +18,19 @@ public interface UserHealthService {
 //    UserHealth GetUser(String user_name);
 
     //用户新增药品
-    DoResult addDrug(String userDrug);
+    DoResult addDrug(UserDrug userDrug);
+
+    //用户删除药品
+    DoResult deleteDrug(String drugUuid);
+
+    //修改药品天数
+    DoResult updateDrugDays(String drugUuid,String eatDays,String createTime);
+
+    //用户新增药品详细信息
+    DoResult addDrugDetail(UserDrugDetail userDrugDetail);
+
+    //删除药品详细信息
+    DoResult deleteDrugDetailDate(String drugUuid,String subId);
 
     //返回药品
     DoResult queryDrug(QueryPage queryPage);
@@ -26,11 +38,16 @@ public interface UserHealthService {
     //返回药品总数
     DoResult drugNum();
 
+    //查询药品详细信息
+    DoResult queryDrugDetail(String drugUuid);
+
     //新增食物
     DoResult addFood(String userFood);
 
     //订阅药品
-    DoResult subscription(String drugUuid,String status);
+    DoResult subscription(String drugUuid,String subId,String status);
+
+    void subscriptionDrug(String openId,String drugName,String eatTime,String eatNum,String detail);
 
     //查看文件
     DoResult lookFile();

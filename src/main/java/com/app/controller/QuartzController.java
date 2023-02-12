@@ -32,7 +32,7 @@ public class QuartzController {
      */
     @GetMapping("/addJob")
     public DoResult addJob(String jobName){
-        String cron = "0/3 * * * * ?";
+        String cron = "0/30 * * * * ?";
         HashMap<String,String> map = new HashMap<>();
         map.put("jobName",jobName);
         quartzManager.addJob(jobName, MyJob.class,cron,map);
