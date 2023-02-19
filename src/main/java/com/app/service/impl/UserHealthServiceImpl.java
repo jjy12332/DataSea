@@ -179,7 +179,7 @@ public class UserHealthServiceImpl implements UserHealthService {
             emp.insertUserHealth(userHealth);
             return DoResult.success("打卡成功", "");
         } catch (Exception e) {
-            return DoResult.error();
+            return DoResult.error("打卡失败","");
         }
     }
 
